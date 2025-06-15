@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package user.v1;
+
+option go_package = "github.com/mdqni/Attendly/proto/gen/go/user/v1;userv1";
+
+service UserService {
+  rpc Register (RegisterRequest) returns (RegisterResponse);
+
+  rpc GetUser (GetUserRequest) returns (GetUserResponse);
+
+  rpc IsInGroup (IsInGroupRequest) returns (IsInGroupResponse);
+}
+
+message User {
+  string id = 1;
+  string name = 2;
+  string barcode = 3;
+  string role = 4;       // "student", "teacher", "admin"
+}
+
+message RegisterRequest {
+  string name = 1;
+  string barcode = 2;
+  string role = 3; // "student" | "teacher" | "admin"
+}
+
+message RegisterResponse {
+  User user = 1;
+}
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message IsInGroupRequest {
+  string user_id = 1;
+  string group_id = 2;
+}
+
+message IsInGroupResponse {
+  bool is_member = 1;
+}
