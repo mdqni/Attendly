@@ -17,6 +17,15 @@ type UserService interface {
 	Register(ctx context.Context, name, barcode, role string) (*userv1.User, error)
 	GetUser(ctx context.Context, id string) (*userv1.User, error)
 	IsInGroup(ctx context.Context, userID, groupID string) (bool, error)
+	HasPermission(ctx context.Context, userID, permission string) (bool, error)
+}
+
+func (h *userServer) HasPermission(ctx context.Context, userID, permission string) (bool, error) {
+	has, err := h.service.HasPermission(ctx, userID, permission)
+	if err != nil {
+		return false, err
+	}
+	return has, nil
 }
 
 func Register(gRPCServer *grpc.Server, service UserService) {
@@ -24,9 +33,15 @@ func Register(gRPCServer *grpc.Server, service UserService) {
 }
 
 func (h *userServer) Register(ctx context.Context, req *userv1.RegisterRequest) (*userv1.RegisterResponse, error) {
-	if req.GetRole() != "admin" || req.GetRole() != "teacher" {
-		return nil, status.Error(codes.PermissionDenied, "role must be 'admin' or 'teacher'")
+	validRoles := map[string]struct{}{
+		"admin":   {},
+		"teacher": {},
 	}
+
+	if _, ok := validRoles[req.GetRole()]; !ok {
+		return nil, status.Error(codes.PermissionDenied, "invalid role")
+	}
+
 	user, err := h.service.Register(ctx, req.GetName(), req.GetBarcode(), req.GetRole())
 
 	if err != nil {

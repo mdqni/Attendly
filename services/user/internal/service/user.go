@@ -34,3 +34,11 @@ func (s *userService) GetUser(ctx context.Context, id string) (*userv1.User, err
 func (s *userService) IsInGroup(ctx context.Context, userID, groupID string) (bool, error) {
 	return s.repo.CheckUserInGroup(ctx, userID, groupID)
 }
+
+func (s *userService) HasPermission(ctx context.Context, userID, action string) (bool, error) {
+	permission, err := s.repo.HasPermission(ctx, userID, action)
+	if err != nil {
+		return false, err
+	}
+	return permission, nil
+}

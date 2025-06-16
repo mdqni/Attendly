@@ -9,4 +9,5 @@ type UserRepository interface {
 	SaveUser(ctx context.Context, user *userv1.User) error
 	GetUserByID(ctx context.Context, id string) (*userv1.User, error)
 	CheckUserInGroup(ctx context.Context, userID, groupID string) (bool, error)
+	HasPermission(ctx context.Context, userID, action string) (bool, error)
 }

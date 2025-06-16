@@ -4,6 +4,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/mdqni/Attendly/services/user/internal/config"
 	"github.com/mdqni/Attendly/services/user/internal/delivery/grpc"
+	"github.com/mdqni/Attendly/services/user/internal/interceptor"
 	"github.com/mdqni/Attendly/services/user/internal/repository/postgres"
 	"github.com/mdqni/Attendly/services/user/internal/service"
 	g "google.golang.org/grpc"
@@ -30,9 +31,6 @@ func NewApp(cfg *config.Config, log *slog.Logger, address string) *App {
 		}),
 	}
 
-	server := g.NewServer(g.ChainUnaryInterceptor(
-		recovery.UnaryServerInterceptor(recoveryOpts...),
-	))
 	repo, err := postgres.New(cfg.ConnString)
 	if err != nil {
 		log.Error("failed to init postgres", slog.String("op", op), slog.Any("err", err))
@@ -40,7 +38,16 @@ func NewApp(cfg *config.Config, log *slog.Logger, address string) *App {
 	}
 
 	svc := service.NewUserService(repo)
-	grpc.Register(server, svc)
+
+	server := g.NewServer(g.ChainUnaryInterceptor(
+		recovery.UnaryServerInterceptor(recoveryOpts...),
+		interceptor.AuthInterceptor(),
+		interceptor.RBACInterceptor(svc),
+	))
+	grpc.Register(
+		server,
+		svc,
+	)
 
 	return &App{server: server, log: log, address: address}
 }
@@ -52,7 +59,7 @@ func (a *App) Run() {
 		panic(err)
 	}
 
-	a.log.Info("grpc server started", slog.String("addr", lis.Addr().String()))
+	a.log.Info("grpc server started", "op: ", op, slog.String("addr", lis.Addr().String()))
 	if err := a.server.Serve(lis); err != nil {
 		panic(err)
 	}

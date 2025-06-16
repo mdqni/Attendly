@@ -44,7 +44,45 @@ func New(connString string) (*PostgresRepo, error) {
     barcode TEXT UNIQUE NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('student', 'teacher', 'admin')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);`,
+);
+CREATE TABLE IF NOT EXISTS roles (
+    id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS permissions (
+    id SERIAL PRIMARY KEY,
+    action TEXT UNIQUE NOT NULL  -- e.g., 'user:create', 'user:read'
+);
+
+CREATE TABLE IF NOT EXISTS role_permissions (
+    role_id INT REFERENCES roles(id),
+    permission_id INT REFERENCES permissions(id),
+    PRIMARY KEY(role_id, permission_id)
+);
+
+INSERT INTO roles (name) VALUES ('admin'), ('teacher'), ('student')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO permissions (action) VALUES ('user:create'), ('user:read'), ('user:update')
+ON CONFLICT DO NOTHING;
+
+-- admin — все
+INSERT INTO role_permissions (role_id, permission_id) VALUES 
+(1,1), (1,2), (1,3)
+ON CONFLICT DO NOTHING;
+
+-- teacher
+INSERT INTO role_permissions (role_id, permission_id) VALUES 
+(2,2), (2,3)
+ON CONFLICT DO NOTHING;
+
+-- student
+INSERT INTO role_permissions (role_id, permission_id) VALUES 
+(3,2)
+ON CONFLICT DO NOTHING;
+
+`,
 	}
 
 	for _, stmt := range statements {
@@ -82,5 +120,26 @@ func (r *PostgresRepo) GetUserByID(ctx context.Context, id string) (*userv1.User
 }
 
 func (r *PostgresRepo) CheckUserInGroup(ctx context.Context, userID, groupID string) (bool, error) {
-	return true, nil // заглушка
+	return true, nil
+}
+
+func (r *PostgresRepo) HasPermission(ctx context.Context, userID string, action string) (bool, error) {
+	const query = `
+		SELECT EXISTS (
+			SELECT 1
+			FROM users u
+			JOIN roles r ON r.name = u.role
+			JOIN role_permissions rp ON rp.role_id = r.id
+			JOIN permissions p ON p.id = rp.permission_id
+			WHERE u.id = $1 AND p.action = $2
+		);
+	`
+
+	var hasPermission bool
+	err := r.db.QueryRow(ctx, query, userID, action).Scan(&hasPermission)
+	if err != nil {
+		return false, fmt.Errorf("CheckPermission query error: %w", err)
+	}
+
+	return hasPermission, nil
 }
