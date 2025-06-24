@@ -7,6 +7,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"log"
+	"strings"
 )
 
 type userServer struct {
@@ -17,6 +19,7 @@ type UserService interface {
 	Register(ctx context.Context, name, barcode, role string) (*userv1.User, error)
 	GetUser(ctx context.Context, id string) (*userv1.User, error)
 	IsInGroup(ctx context.Context, userID, groupID string) (bool, error)
+	Login(ctx context.Context, name, password string) (*userv1.User, error)
 	HasPermission(ctx context.Context, userID, permission string) (bool, error)
 }
 
@@ -28,21 +31,21 @@ func (h *userServer) HasPermission(ctx context.Context, userID, permission strin
 	return has, nil
 }
 
-func Register(gRPCServer *grpc.Server, service UserService) {
-	userv1.RegisterUserServiceServer(gRPCServer, &userServer{service: service})
+func Register(gRPCServer *grpc.Server, svc service.UserService) {
+	userv1.RegisterUserServiceServer(gRPCServer, &userServer{service: svc})
+}
+
+func (h *userServer) Login(ctx context.Context, request *userv1.LoginRequest) (*userv1.LoginResponse, error) {
+	user, err := h.service.Login(ctx, request.Barcode, request.Password)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &userv1.LoginResponse{Token: user.GetToken(), User: user.GetUser()}, nil
 }
 
 func (h *userServer) Register(ctx context.Context, req *userv1.RegisterRequest) (*userv1.RegisterResponse, error) {
-	validRoles := map[string]struct{}{
-		"admin":   {},
-		"teacher": {},
-	}
-
-	if _, ok := validRoles[req.GetRole()]; !ok {
-		return nil, status.Error(codes.PermissionDenied, "invalid role")
-	}
-
-	user, err := h.service.Register(ctx, req.GetName(), req.GetBarcode(), req.GetRole())
+	user, err := h.service.Register(ctx, req.GetName(), req.GetBarcode(), req.GetPassword(), req.GetRole())
 
 	if err != nil {
 		return nil, err
@@ -52,12 +55,15 @@ func (h *userServer) Register(ctx context.Context, req *userv1.RegisterRequest) 
 }
 
 func (h *userServer) GetUser(ctx context.Context, req *userv1.GetUserRequest) (*userv1.GetUserResponse, error) {
-	user, err := h.service.GetUser(ctx, req.GetId())
+	if strings.TrimSpace(req.GetId()) == "" {
+		return nil, status.Error(codes.InvalidArgument, "no user ID")
+	}
+	user, err := h.service.GetUserById(ctx, req.GetId())
 	if err != nil {
-
+		log.Println(err)
 		return nil, status.Error(codes.NotFound, "User not found")
 	}
-	return &userv1.GetUserResponse{User: user}, nil
+	return &userv1.GetUserResponse{User: sanitizeUser(user)}, nil
 }
 
 func (h *userServer) IsInGroup(ctx context.Context, req *userv1.IsInGroupRequest) (*userv1.IsInGroupResponse, error) {
@@ -68,4 +74,9 @@ func (h *userServer) IsInGroup(ctx context.Context, req *userv1.IsInGroupRequest
 	return &userv1.IsInGroupResponse{
 		IsMember: isInGroup,
 	}, nil
+}
+
+func sanitizeUser(u *userv1.User) *userv1.User {
+	u.Password = ""
+	return u
 }

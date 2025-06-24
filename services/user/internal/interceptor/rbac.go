@@ -2,55 +2,71 @@ package interceptor
 
 import (
 	"context"
-	"github.com/mdqni/Attendly/services/user/internal/service"
+	"github.com/mdqni/Attendly/services/user/internal/utils/token"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"log"
 	"strings"
 )
 
-func RBACInterceptor(svc service.UserService) grpc.UnaryServerInterceptor {
+var openMethods = map[string]struct{}{
+	"/user.v1.UserService/Login":    {},
+	"/user.v1.UserService/Register": {},
+}
+
+const userIDKey = "user_id_key"
+
+func RBACInterceptor(secret string) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req interface{},
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
-		userID, ok := UserIDFromContext(ctx)
+		if _, ok := openMethods[info.FullMethod]; ok {
+			return handler(ctx, req)
+		}
+
+		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
-			return nil, status.Error(codes.Unauthenticated, "no user ID")
+			return nil, status.Error(codes.Unauthenticated, "missing metadata")
+		}
+
+		tokens := md.Get("authorization")
+		if len(tokens) == 0 {
+			return nil, status.Error(codes.Unauthenticated, "missing token")
+		}
+
+		tokenStr := strings.TrimPrefix(tokens[0], "Bearer ")
+		claims, err := token.ParseJWT(tokenStr, secret)
+		if err != nil {
+			return nil, status.Error(codes.Unauthenticated, "invalid token")
 		}
 
 		action := normalizeAction(info.FullMethod)
-		log.Println("RBAC interceptor:", userID, action)
-
-		ok, err := svc.HasPermission(ctx, userID, action)
-		if err != nil {
-			return nil, status.Error(codes.Internal, "permission check error")
-		}
-		if !ok {
-			return nil, status.Error(codes.PermissionDenied, "no permission")
+		log.Println(action)
+		if !contains(claims.Perms, action) {
+			return nil, status.Error(codes.PermissionDenied, "permission denied")
 		}
 
+		ctx = context.WithValue(ctx, userIDKey, claims.UserID)
 		return handler(ctx, req)
 	}
+}
+func contains(list []string, val string) bool {
+	for _, v := range list {
+		if v == val {
+			return true
+		}
+	}
+	return false
 }
 
 func normalizeAction(fullMethod string) string {
 	fullMethod = strings.TrimPrefix(fullMethod, "/")
 	fullMethod = strings.ReplaceAll(fullMethod, ".", "_")
 	fullMethod = strings.ReplaceAll(fullMethod, "/", "_")
-	return toSnakeCase(fullMethod)
-}
-
-func toSnakeCase(input string) string {
-	var result []rune
-	for i, r := range input {
-		if i > 0 && r >= 'A' && r <= 'Z' {
-			result = append(result, '_')
-		}
-		result = append(result, r)
-	}
-	return strings.ToLower(string(result))
+	return fullMethod
 }

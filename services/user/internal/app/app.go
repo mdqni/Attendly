@@ -41,8 +41,8 @@ func NewApp(cfg *config.Config, log *slog.Logger, address string) *App {
 
 	server := g.NewServer(g.ChainUnaryInterceptor(
 		recovery.UnaryServerInterceptor(recoveryOpts...),
-		interceptor.AuthInterceptor(),
-		interceptor.RBACInterceptor(svc),
+		//interceptor.AuthInterceptor(cfg.JwtSecret),
+		interceptor.RBACInterceptor(cfg.JwtSecret),
 	))
 	grpc.Register(
 		server,
@@ -59,7 +59,7 @@ func (a *App) Run() {
 		panic(err)
 	}
 
-	a.log.Info("grpc server started", "op: ", op, slog.String("addr", lis.Addr().String()))
+	a.log.Info("grpc server started", "op:", op, slog.String("addr", lis.Addr().String()))
 	if err := a.server.Serve(lis); err != nil {
 		panic(err)
 	}

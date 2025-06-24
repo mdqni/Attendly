@@ -10,6 +10,8 @@ service UserService {
   rpc GetUser (GetUserRequest) returns (GetUserResponse);
 
   rpc IsInGroup (IsInGroupRequest) returns (IsInGroupResponse);
+
+  rpc Login(LoginRequest) returns (LoginResponse);
 }
 
 message User {
@@ -17,12 +19,23 @@ message User {
   string name = 2;
   string barcode = 3;
   string role = 4;       // "student", "teacher", "admin"
+  string password = 5;
 }
-
 message RegisterRequest {
   string name = 1;
   string barcode = 2;
-  string role = 3; // "student" | "teacher" | "admin"
+  string password = 3;
+  string role = 4;
+}
+
+message LoginRequest {
+  string barcode = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string token = 1;
+  User user = 2;
 }
 
 message RegisterResponse {

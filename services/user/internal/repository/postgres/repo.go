@@ -2,9 +2,13 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	userv1 "github.com/mdqni/Attendly/proto/gen/go/user/v1"
+	"github.com/mdqni/Attendly/services/user/internal/utils/passwordUtils"
+	"log"
 )
 
 type PostgresRepo struct {
@@ -17,11 +21,13 @@ func New(connString string) (*PostgresRepo, error) {
 	ctx := context.Background()
 	pool, err := pgxpool.New(ctx, connString)
 	if err != nil {
+		log.Println(err)
 		return nil, fmt.Errorf("%s: failed to connect to database: %w", op, err)
 	}
 
 	_, err = pool.Exec(ctx, `SET search_path TO "user"`)
 	if err != nil {
+		log.Println(err)
 		return nil, fmt.Errorf("%s: failed to set search_path: %w", op, err)
 	}
 
@@ -38,51 +44,33 @@ func New(connString string) (*PostgresRepo, error) {
 		END
 		$$;`,
 
-		`CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
-    barcode TEXT UNIQUE NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('student', 'teacher', 'admin')),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-CREATE TABLE IF NOT EXISTS roles (
-    id SERIAL PRIMARY KEY,
-    name TEXT UNIQUE NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS permissions (
-    id SERIAL PRIMARY KEY,
-    action TEXT UNIQUE NOT NULL  -- e.g., 'user:create', 'user:read'
-);
-
-CREATE TABLE IF NOT EXISTS role_permissions (
-    role_id INT REFERENCES roles(id),
-    permission_id INT REFERENCES permissions(id),
-    PRIMARY KEY(role_id, permission_id)
-);
-
-INSERT INTO roles (name) VALUES ('admin'), ('teacher'), ('student')
-ON CONFLICT DO NOTHING;
-
-INSERT INTO permissions (action) VALUES ('user:create'), ('user:read'), ('user:update')
-ON CONFLICT DO NOTHING;
-
--- admin — все
-INSERT INTO role_permissions (role_id, permission_id) VALUES 
-(1,1), (1,2), (1,3)
-ON CONFLICT DO NOTHING;
-
--- teacher
-INSERT INTO role_permissions (role_id, permission_id) VALUES 
-(2,2), (2,3)
-ON CONFLICT DO NOTHING;
-
--- student
-INSERT INTO role_permissions (role_id, permission_id) VALUES 
-(3,2)
-ON CONFLICT DO NOTHING;
-
-`,
+		`CREATE TABLE IF NOT EXISTS roles (
+			id SERIAL PRIMARY KEY,
+			name TEXT UNIQUE NOT NULL
+		);
+		
+		CREATE TABLE IF NOT EXISTS users (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			name TEXT NOT NULL,
+			barcode TEXT UNIQUE NOT NULL,
+			password TEXT NOT NULL,
+			role_id INT REFERENCES roles(id)
+		);
+		
+		CREATE TABLE IF NOT EXISTS permissions (
+			id SERIAL PRIMARY KEY,
+			action TEXT UNIQUE NOT NULL
+		);
+		
+		
+		CREATE TABLE IF NOT EXISTS role_permissions (
+			role_id INT REFERENCES roles(id) ON DELETE CASCADE,
+			permission_id INT REFERENCES permissions(id) ON DELETE CASCADE,
+			PRIMARY KEY (role_id, permission_id)
+		);
+		
+		INSERT INTO roles (name) VALUES ('admin'), ('teacher'), ('student')
+		ON CONFLICT DO NOTHING;`,
 	}
 
 	for _, stmt := range statements {
@@ -94,16 +82,27 @@ ON CONFLICT DO NOTHING;
 	return &PostgresRepo{db: pool}, nil
 }
 func (r *PostgresRepo) SaveUser(ctx context.Context, user *userv1.User) error {
-	_, err := r.db.Exec(ctx, `
-		INSERT INTO users (id, name, barcode, role)
-		VALUES ($1, $2, $3, $4)
-	`, user.Id, user.Name, user.Barcode, user.Role)
+	var roleID int
+	err := r.db.QueryRow(ctx, `SELECT id FROM roles WHERE name = $1`, user.Role).Scan(&roleID)
+	if err != nil {
+		return fmt.Errorf("role not found: %w", err)
+	}
+	hashed, err := passwordUtils.HashPassword(user.Password)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+	user.Password = hashed
+
+	_, err = r.db.Exec(ctx, `
+		INSERT INTO users (id, name, barcode, password, role_id)
+		VALUES ($1, $2, $3, $4, $5)
+	`, user.Id, user.Name, user.Barcode, user.Password, roleID)
 	return err
 }
 
-func (r *PostgresRepo) GetUserByID(ctx context.Context, id string) (*userv1.User, error) {
+func (r *PostgresRepo) GetUserById(ctx context.Context, id string) (*userv1.User, error) {
 	const query = `
-		SELECT id, name, barcode, role
+		SELECT id, name, barcode, role_id, password
 		FROM users
 		WHERE id = $1
 	`
@@ -111,11 +110,47 @@ func (r *PostgresRepo) GetUserByID(ctx context.Context, id string) (*userv1.User
 	row := r.db.QueryRow(ctx, query, id)
 
 	var user userv1.User
-	err := row.Scan(&user.Id, &user.Name, &user.Barcode, &user.Role)
+	err := row.Scan(&user.Id, &user.Name, &user.Barcode, &user.Role, &user.Password)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
 
+	var role string
+	err = r.db.QueryRow(ctx, `SELECT name FROM roles WHERE id = $1`, user.Role).Scan(&role)
+	if err != nil {
+		return nil, err
+	}
+	user.Role = role
+	return &user, nil
+}
+
+func (r *PostgresRepo) GetUserByBarcode(ctx context.Context, barcode string) (*userv1.User, error) {
+	const query = `
+		SELECT id, name, barcode, role_id, password
+		FROM users
+		WHERE barcode = $1
+	`
+
+	row := r.db.QueryRow(ctx, query, barcode)
+
+	var user userv1.User
+	err := row.Scan(&user.Id, &user.Name, &user.Barcode, &user.Role, &user.Password)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	var role string
+	err = r.db.QueryRow(ctx, `SELECT name FROM roles WHERE id = $1`, user.Role).Scan(&role)
+	if err != nil {
+		return nil, err
+	}
+	user.Role = role
 	return &user, nil
 }
 
@@ -142,4 +177,32 @@ func (r *PostgresRepo) HasPermission(ctx context.Context, userID string, action 
 	}
 
 	return hasPermission, nil
+}
+
+func (r *PostgresRepo) GetPermissions(ctx context.Context, userID string) ([]string, error) {
+	query := `
+	SELECT p.action
+	FROM users u
+	JOIN roles r ON u.role_id = r.id
+	JOIN role_permissions rp ON rp.role_id = r.id
+	JOIN permissions p ON p.id = rp.permission_id
+	WHERE u.id = $1;
+	`
+
+	rows, err := r.db.Query(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var perms []string
+	for rows.Next() {
+		var perm string
+		if err := rows.Scan(&perm); err != nil {
+			return nil, err
+		}
+		perms = append(perms, perm)
+	}
+	log.Println("Permissions:", perms)
+	return perms, rows.Err()
 }
