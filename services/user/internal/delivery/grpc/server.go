@@ -15,6 +15,11 @@ type userServer struct {
 	userv1.UnimplementedUserServiceServer
 	service service.UserService
 }
+
+func Register(gRPCServer *grpc.Server, svc service.UserService) {
+	userv1.RegisterUserServiceServer(gRPCServer, &userServer{service: svc})
+}
+
 type UserService interface {
 	Register(ctx context.Context, name, barcode, role string) (*userv1.User, error)
 	GetUser(ctx context.Context, id string) (*userv1.User, error)
@@ -29,10 +34,6 @@ func (h *userServer) HasPermission(ctx context.Context, userID, permission strin
 		return false, err
 	}
 	return has, nil
-}
-
-func Register(gRPCServer *grpc.Server, svc service.UserService) {
-	userv1.RegisterUserServiceServer(gRPCServer, &userServer{service: svc})
 }
 
 func (h *userServer) Login(ctx context.Context, request *userv1.LoginRequest) (*userv1.LoginResponse, error) {

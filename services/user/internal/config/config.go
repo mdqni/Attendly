@@ -14,6 +14,11 @@ type Config struct {
 	GRPC           GRPCConfig `yaml:"grpc"`
 	MigrationsPath string
 	TokenTTL       time.Duration `yaml:"token_ttl" env-default:"1h"`
+	Redis          RedisConfig   `yaml:"redis"`
+}
+
+type RedisConfig struct {
+	Addr string `yaml:"addr" env-default:"localhost:6379"`
 }
 
 type GRPCConfig struct {

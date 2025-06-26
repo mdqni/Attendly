@@ -7,6 +7,7 @@ import (
 	"github.com/mdqni/Attendly/services/user/internal/interceptor"
 	"github.com/mdqni/Attendly/services/user/internal/repository/postgres"
 	"github.com/mdqni/Attendly/services/user/internal/service"
+	"github.com/mdqni/Attendly/shared/redislimiter"
 	g "google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -20,7 +21,7 @@ type App struct {
 	address string
 }
 
-func NewApp(cfg *config.Config, log *slog.Logger, address string) *App {
+func NewApp(cfg *config.Config, log *slog.Logger, address string, limiter *redislimiter.Limiter) *App {
 	const op = "app.NewApp"
 
 	recoveryOpts := []recovery.Option{
@@ -37,11 +38,10 @@ func NewApp(cfg *config.Config, log *slog.Logger, address string) *App {
 		panic(err)
 	}
 
-	svc := service.NewUserService(repo)
+	svc := service.NewUserService(repo, limiter)
 
 	server := g.NewServer(g.ChainUnaryInterceptor(
 		recovery.UnaryServerInterceptor(recoveryOpts...),
-		//interceptor.AuthInterceptor(cfg.JwtSecret),
 		interceptor.RBACInterceptor(cfg.JwtSecret),
 	))
 	grpc.Register(

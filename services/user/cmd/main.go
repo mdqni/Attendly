@@ -3,6 +3,7 @@ package main
 import (
 	app2 "github.com/mdqni/Attendly/services/user/internal/app"
 	"github.com/mdqni/Attendly/services/user/internal/config"
+	"github.com/mdqni/Attendly/shared/redislimiter"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -19,11 +20,13 @@ func main() {
 	cfg := config.MustLoad()
 
 	log := setupLogger(cfg.Env)
-	app := app2.NewApp(cfg, log, "localhost:50051")
+
+	rdb := redislimiter.NewRedisClient(cfg.Redis.Addr)
+	limiter := redislimiter.NewLimiter(rdb)
+	app := app2.NewApp(cfg, log, "localhost:50051", limiter)
 	go func() {
 		app.Run()
 	}()
-
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 	<-stop

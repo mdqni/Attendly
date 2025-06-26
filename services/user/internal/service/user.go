@@ -7,6 +7,7 @@ import (
 	"github.com/mdqni/Attendly/services/user/internal/repository"
 	passwordUtils "github.com/mdqni/Attendly/services/user/internal/utils/passwordUtils"
 	"github.com/mdqni/Attendly/services/user/internal/utils/token"
+	"github.com/mdqni/Attendly/shared/redislimiter"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"log"
@@ -14,11 +15,12 @@ import (
 )
 
 type userService struct {
-	repo repository.UserRepository
+	repo    repository.UserRepository
+	limiter *redislimiter.Limiter
 }
 
-func NewUserService(repo repository.UserRepository) UserService {
-	return &userService{repo: repo}
+func NewUserService(repo repository.UserRepository, limiter *redislimiter.Limiter) UserService {
+	return &userService{repo: repo, limiter: limiter}
 }
 
 func (s *userService) Register(ctx context.Context, name, barcode, password, role string) (*userv1.User, error) {
@@ -34,7 +36,17 @@ func (s *userService) Register(ctx context.Context, name, barcode, password, rol
 	return user, err
 }
 
-func (s *userService) Login(ctx context.Context, barcode, password string) (*userv1.LoginResponse, error) {
+func (s *userService) Login(ctx context.Context, barcode string, password string) (*userv1.LoginResponse, error) {
+	key := "login:" + barcode
+	allowed, err := s.limiter.Allow(ctx, key, 5, time.Minute)
+	if err != nil {
+		log.Println("rate limiter error:", err)
+		return nil, status.Error(codes.Internal, "rate limiter error")
+	}
+	if !allowed {
+		return nil, status.Error(codes.ResourceExhausted, "Too many login attempts, try again later")
+	}
+
 	user, err := s.repo.GetUserByBarcode(ctx, barcode)
 	if err != nil {
 		log.Println(err)
@@ -54,7 +66,10 @@ func (s *userService) Login(ctx context.Context, barcode, password string) (*use
 	if err != nil {
 		return nil, status.Error(codes.Internal, "token generation failed")
 	}
-
+	err = s.limiter.Reset(ctx, key)
+	if err != nil {
+		log.Println("error on reset:", err)
+	}
 	return &userv1.LoginResponse{
 		Token: tokenStr,
 		User:  user,
