@@ -16,14 +16,21 @@ import (
 
 type userService struct {
 	repo    repository.UserRepository
-	limiter *redislimiter.Limiter
+	limiter redislimiter.LimiterInterface
 }
 
-func NewUserService(repo repository.UserRepository, limiter *redislimiter.Limiter) UserService {
+func NewUserService(repo repository.UserRepository, limiter redislimiter.LimiterInterface) UserService {
 	return &userService{repo: repo, limiter: limiter}
 }
 
 func (s *userService) Register(ctx context.Context, name, barcode, password, role string) (*userv1.User, error) {
+	if name == "" || barcode == "" || password == "" || role == "" {
+		return nil, status.Error(codes.InvalidArgument, "missing required fields")
+	}
+	if len(password) < 8 {
+		return nil, status.Error(codes.InvalidArgument, "password too short")
+	}
+
 	user := &userv1.User{
 		Id:       uuid.NewString(),
 		Name:     name,

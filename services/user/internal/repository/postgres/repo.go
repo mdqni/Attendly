@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	userv1 "github.com/mdqni/Attendly/proto/gen/go/user/v1"
 	"github.com/mdqni/Attendly/services/user/internal/utils/passwordUtils"
@@ -82,6 +83,7 @@ func New(connString string) (*PostgresRepo, error) {
 	return &PostgresRepo{db: pool}, nil
 }
 func (r *PostgresRepo) SaveUser(ctx context.Context, user *userv1.User) error {
+	op := "storage.postgres.saveUser"
 	var roleID int
 	err := r.db.QueryRow(ctx, `SELECT id FROM roles WHERE name = $1`, user.Role).Scan(&roleID)
 	if err != nil {
@@ -97,6 +99,15 @@ func (r *PostgresRepo) SaveUser(ctx context.Context, user *userv1.User) error {
 		INSERT INTO users (id, name, barcode, password, role_id)
 		VALUES ($1, $2, $3, $4, $5)
 	`, user.Id, user.Name, user.Barcode, user.Password, roleID)
+
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		return fmt.Errorf("barcode already exists: %w", err)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to save user: %w", err)
+	}
+
 	return err
 }
 

@@ -9,9 +9,15 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+type LimiterInterface interface {
+	Allow(ctx context.Context, key string, rate int, period time.Duration) (bool, error)
+	Reset(ctx context.Context, key string) error
+}
 type Limiter struct {
 	l *redis_rate.Limiter
 }
+
+var _ LimiterInterface = (*Limiter)(nil)
 
 func NewLimiter(client *redis.Client) *Limiter {
 	return &Limiter{l: redis_rate.NewLimiter(client)}
