@@ -20,14 +20,6 @@ func Register(gRPCServer *grpc.Server, svc service.UserService) {
 	userv1.RegisterUserServiceServer(gRPCServer, &userServer{service: svc})
 }
 
-type UserService interface {
-	Register(ctx context.Context, name, barcode, role string) (*userv1.User, error)
-	GetUser(ctx context.Context, id string) (*userv1.User, error)
-	IsInGroup(ctx context.Context, userID, groupID string) (bool, error)
-	Login(ctx context.Context, name, password string) (*userv1.User, error)
-	HasPermission(ctx context.Context, userID, permission string) (bool, error)
-}
-
 func (h *userServer) HasPermission(ctx context.Context, userID, permission string) (bool, error) {
 	has, err := h.service.HasPermission(ctx, userID, permission)
 	if err != nil {

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	app2 "github.com/mdqni/Attendly/services/user/internal/app"
 	"github.com/mdqni/Attendly/services/user/internal/config"
 	"github.com/mdqni/Attendly/shared/redislimiter"
@@ -23,6 +25,12 @@ func main() {
 
 	rdb := redislimiter.NewRedisClient(cfg.Redis.Addr)
 	limiter := redislimiter.NewLimiter(rdb)
+	pong, err := rdb.Ping(context.Background()).Result()
+	if err != nil {
+		log.Error("Redis connection failed: %v", err)
+	}
+	fmt.Println("Redis PING OK:", pong)
+
 	app := app2.NewApp(cfg, log, "localhost:50051", limiter)
 	go func() {
 		app.Run()

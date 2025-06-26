@@ -37,6 +37,10 @@ func (s *userService) Register(ctx context.Context, name, barcode, password, rol
 }
 
 func (s *userService) Login(ctx context.Context, barcode string, password string) (*userv1.LoginResponse, error) {
+	if s.limiter == nil {
+		log.Println("FATAL: limiter is nil")
+	}
+
 	key := "login:" + barcode
 	allowed, err := s.limiter.Allow(ctx, key, 5, time.Minute)
 	if err != nil {
