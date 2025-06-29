@@ -37,6 +37,7 @@ message User {
   string role = 4;       // "student", "teacher", "admin"
   string password = 5;
 }
+
 message RegisterRequest {
   string name = 1;
   string barcode = 2;

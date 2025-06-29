@@ -4,6 +4,7 @@ import (
 	"context"
 	userv1 "github.com/mdqni/Attendly/proto/gen/go/user/v1"
 	"github.com/mdqni/Attendly/services/user/internal/service"
+	errs "github.com/mdqni/Attendly/shared/errs"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -20,15 +21,10 @@ func Register(gRPCServer *grpc.Server, svc service.UserService) {
 	userv1.RegisterUserServiceServer(gRPCServer, &userServer{service: svc})
 }
 
-func (h *userServer) HasPermission(ctx context.Context, userID, permission string) (bool, error) {
-	has, err := h.service.HasPermission(ctx, userID, permission)
-	if err != nil {
-		return false, err
-	}
-	return has, nil
-}
-
 func (h *userServer) Login(ctx context.Context, request *userv1.LoginRequest) (*userv1.LoginResponse, error) {
+	if strings.TrimSpace(request.Barcode) == "" || strings.TrimSpace(request.Password) != "" {
+		return nil, status.Error(codes.InvalidArgument, errs.ErrMissingField.Error())
+	}
 	user, err := h.service.Login(ctx, request.Barcode, request.Password)
 	if err != nil {
 		log.Println(err)

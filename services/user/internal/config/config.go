@@ -3,7 +3,9 @@ package config
 import (
 	"flag"
 	"github.com/ilyakaznacheev/cleanenv"
+	"log"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -22,35 +24,39 @@ type RedisConfig struct {
 }
 
 type GRPCConfig struct {
-	Port    int           `yaml:"port"`
+	Address string        `yaml:"address" env-default:"localhost:50051"`
 	Timeout time.Duration `yaml:"timeout"`
 }
 
 func MustLoad() *Config {
 	configPath := fetchConfigPath()
 	if configPath == "" {
-		panic("config path is empty")
+		configPath = "./config/config.yaml"
 	}
 
-	// check if file exists
+	cfg := Config{}
+
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		panic("config file does not exist: " + configPath)
+		log.Println("config file not found, using defaults")
+		return &cfg
 	}
-
-	var cfg Config
 
 	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
-		panic("config path is empty: " + err.Error())
+		panic("config parse error: " + err.Error())
 	}
 
 	return &cfg
 }
 
+var once sync.Once
+
 func fetchConfigPath() string {
 	var res string
 
-	flag.StringVar(&res, "config", "", "path to config file")
-	flag.Parse()
+	once.Do(func() {
+		flag.StringVar(&res, "config", "", "path to config file")
+		flag.Parse()
+	})
 
 	if res == "" {
 		res = os.Getenv("CONFIG_PATH")

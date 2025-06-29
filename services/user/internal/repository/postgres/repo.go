@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	userv1 "github.com/mdqni/Attendly/proto/gen/go/user/v1"
-	"github.com/mdqni/Attendly/services/user/internal/utils/passwordUtils"
+	errs "github.com/mdqni/Attendly/shared/errs"
 	"log"
 )
 
@@ -83,28 +83,22 @@ func New(connString string) (*PostgresRepo, error) {
 	return &PostgresRepo{db: pool}, nil
 }
 func (r *PostgresRepo) SaveUser(ctx context.Context, user *userv1.User) error {
-	op := "storage.postgres.saveUser"
 	var roleID int
 	err := r.db.QueryRow(ctx, `SELECT id FROM roles WHERE name = $1`, user.Role).Scan(&roleID)
 	if err != nil {
 		return fmt.Errorf("role not found: %w", err)
 	}
-	hashed, err := passwordUtils.HashPassword(user.Password)
-	if err != nil {
-		return fmt.Errorf("failed to hash password: %w", err)
-	}
-	user.Password = hashed
 
 	_, err = r.db.Exec(ctx, `
 		INSERT INTO users (id, name, barcode, password, role_id)
 		VALUES ($1, $2, $3, $4, $5)
 	`, user.Id, user.Name, user.Barcode, user.Password, roleID)
 
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-		return fmt.Errorf("barcode already exists: %w", err)
-	}
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return errs.ErrUserAlreadyExists
+		}
 		return fmt.Errorf("failed to save user: %w", err)
 	}
 
@@ -113,28 +107,23 @@ func (r *PostgresRepo) SaveUser(ctx context.Context, user *userv1.User) error {
 
 func (r *PostgresRepo) GetUserById(ctx context.Context, id string) (*userv1.User, error) {
 	const query = `
-		SELECT id, name, barcode, role_id, password
-		FROM users
-		WHERE id = $1
+		SELECT u.id, u.name, u.barcode, u.password, r.name
+		FROM users u
+		JOIN roles r ON u.role_id = r.id
+		WHERE u.id = $1
 	`
 
 	row := r.db.QueryRow(ctx, query, id)
 
 	var user userv1.User
-	err := row.Scan(&user.Id, &user.Name, &user.Barcode, &user.Role, &user.Password)
+	err := row.Scan(&user.Id, &user.Name, &user.Barcode, &user.Password, &user.Role)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
+		return nil, errs.ErrUserNotFound
 	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetUserById scan error: %w", err)
 	}
 
-	var role string
-	err = r.db.QueryRow(ctx, `SELECT name FROM roles WHERE id = $1`, user.Role).Scan(&role)
-	if err != nil {
-		return nil, err
-	}
-	user.Role = role
 	return &user, nil
 }
 
@@ -150,7 +139,7 @@ func (r *PostgresRepo) GetUserByBarcode(ctx context.Context, barcode string) (*u
 	var user userv1.User
 	err := row.Scan(&user.Id, &user.Name, &user.Barcode, &user.Role, &user.Password)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
+		return nil, errs.ErrUserNotFound
 	}
 	if err != nil {
 		return nil, err
@@ -158,6 +147,7 @@ func (r *PostgresRepo) GetUserByBarcode(ctx context.Context, barcode string) (*u
 
 	var role string
 	err = r.db.QueryRow(ctx, `SELECT name FROM roles WHERE id = $1`, user.Role).Scan(&role)
+
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +164,7 @@ func (r *PostgresRepo) HasPermission(ctx context.Context, userID string, action 
 		SELECT EXISTS (
 			SELECT 1
 			FROM users u
-			JOIN roles r ON r.name = u.role
+			JOIN roles r ON r.id = u.role_id
 			JOIN role_permissions rp ON rp.role_id = r.id
 			JOIN permissions p ON p.id = rp.permission_id
 			WHERE u.id = $1 AND p.action = $2

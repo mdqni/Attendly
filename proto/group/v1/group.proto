@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package group.v1;
+import "google/api/annotations.proto";
+import "google/api/http.proto";
+import "user/v1/user.proto";
+option go_package = "github.com/mdqni/Attendly/proto/gen/go/group/v1;groupv1";
+
+
+service GroupService {
+  rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse){
+    option(google.api.http) = {
+      post: "/v1/group",
+      body: "*"
+    };
+  }
+
+  rpc AddUserToGroup(AddUserToGroupRequest) returns (AddUserToGroupResponse){
+    option(google.api.http) = {
+      post: "/v1/group/{group_id}/user",
+      body: "*"
+    };
+  }
+  rpc RemoveUserFromGroup(RemoveUserFromGroupRequest) returns (RemoveUserFromGroupResponse){
+    option(google.api.http) = {
+      delete: "/v1/group/{group_id}/user/{user_id}"
+    };
+  };
+  rpc GetGroup(GetGroupRequest) returns (GetGroupResponse) {
+    option (google.api.http) = {
+      get: "/v1/group/{group_id}"
+    };
+  }
+
+  rpc ListUsersInGroup(ListUsersInGroupRequest) returns (ListUsersInGroupResponse){
+    option (google.api.http) = {
+      get: "/v1/group/{group_id}/users"
+    };
+  };
+}
+
+
+message Group {
+  string id = 1;
+  string name = 2;
+  string department = 3;
+  int32 year = 4;
+}
+
+message ListUsersInGroupRequest{
+  string group_id = 1;
+}
+message ListUsersInGroupResponse {
+  repeated user.v1.User user = 1;
+}
+
+message GetGroupRequest{
+  string group_id = 1;
+}
+
+message GetGroupResponse {
+  Group group = 1;
+}
+
+message RemoveUserFromGroupRequest {
+  string group_id = 1;
+  string user_id = 2;
+}
+message RemoveUserFromGroupResponse{
+  bool success = 1;
+}
+message AddUserToGroupRequest {
+  string group_id = 1;
+  string user_id = 2;
+}
+
+message AddUserToGroupResponse {
+  bool success = 1;
+}
+
+message CreateGroupRequest {
+  string group_name = 1;
+  string department = 2;
+  int32 year = 3;
+}
+message CreateGroupResponse {
+  string group_id = 1;
+}

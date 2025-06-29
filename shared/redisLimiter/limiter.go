@@ -1,4 +1,4 @@
-package redislimiter
+package redisLimiter
 
 import (
 	"context"

@@ -1,8 +1,16 @@
 env: "local"
-conn_string: "postgresql://postgres:postgres@localhost:5432/attendly?sslmode=disable"
+
+connstring: "postgresql://postgres:postgres@localhost:5432/attendly?sslmode=disable"
+
+jwtsecret: "SUPER-SECRET-CODE"
+
+token_ttl: "1h"
+
 grpc:
-  port: 44044
-  timeout: 10h
+  address: "localhost:50051"
+  timeout: "5s"
 
+redis:
+  addr: "localhost:6379"
 
-#attendly-atlfds-sgaagkj-sfdgsdfgsd
+migrationspath: "./migrations"
