@@ -5,7 +5,7 @@ import (
 	"fmt"
 	app2 "github.com/mdqni/Attendly/services/user/internal/app"
 	"github.com/mdqni/Attendly/services/user/internal/config"
-	"github.com/mdqni/Attendly/shared/redisLimiter"
+	"github.com/mdqni/Attendly/shared/rate_limit"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -24,8 +24,8 @@ func main() {
 	log := setupLogger(cfg.Env)
 	fmt.Println("DB:", cfg.ConnString)
 	fmt.Println("JWT:", cfg.JwtSecret)
-	rdb := redisLimiter.NewRedisClient(cfg.Redis.Addr)
-	limiter := redisLimiter.NewLimiter(rdb)
+	rdb := rate_limit.NewRedisClient(cfg.Redis.Addr)
+	limiter := rate_limit.NewLimiter(rdb)
 	pong, err := rdb.Ping(context.Background()).Result()
 	if err != nil {
 		log.Error("Redis connection failed: %v", err)

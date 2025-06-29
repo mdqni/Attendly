@@ -7,7 +7,7 @@ import (
 	"github.com/mdqni/Attendly/services/user/internal/interceptor"
 	"github.com/mdqni/Attendly/services/user/internal/repository/postgres"
 	"github.com/mdqni/Attendly/services/user/internal/service"
-	"github.com/mdqni/Attendly/shared/redisLimiter"
+	"github.com/mdqni/Attendly/shared/rate_limit"
 	g "google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -21,7 +21,7 @@ type App struct {
 	address string
 }
 
-func NewApp(cfg *config.Config, log *slog.Logger, address string, limiter *redisLimiter.Limiter) *App {
+func NewApp(cfg *config.Config, log *slog.Logger, address string, limiter *rate_limit.Limiter) *App {
 	const op = "app.NewApp"
 
 	recoveryOpts := []recovery.Option{

@@ -10,7 +10,7 @@ import (
 	passwordUtils "github.com/mdqni/Attendly/services/user/internal/utils/passwordUtils"
 	"github.com/mdqni/Attendly/services/user/internal/utils/token"
 	errs "github.com/mdqni/Attendly/shared/errs"
-	"github.com/mdqni/Attendly/shared/redisLimiter"
+	"github.com/mdqni/Attendly/shared/rate_limit"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"log"
@@ -19,11 +19,11 @@ import (
 
 type userService struct {
 	repo    repository.UserRepository
-	limiter redisLimiter.LimiterInterface
+	limiter rate_limit.LimiterInterface
 	cfg     *config.Config
 }
 
-func NewUserService(repo repository.UserRepository, limiter redisLimiter.LimiterInterface, cfg *config.Config) UserService {
+func NewUserService(repo repository.UserRepository, limiter rate_limit.LimiterInterface, cfg *config.Config) UserService {
 	if limiter == nil {
 		panic("rate limiter is nil")
 	}

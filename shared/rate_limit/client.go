@@ -1,4 +1,4 @@
-package redisLimiter
+package rate_limit
 
 import "github.com/redis/go-redis/v9"
 
