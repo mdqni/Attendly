@@ -18,7 +18,7 @@ import (
 
 func TestGroupService_CreateGroup_Success(t *testing.T) {
 	mockRepo := mocks.NewGroupRepository(t)
-	svc := service.NewGroupService(mockRepo, &config.Config{})
+	svc := service.NewGroupService(mockRepo, &config.Config{}, nil)
 
 	ctx := context.Background()
 
@@ -34,7 +34,7 @@ func TestGroupService_CreateGroup_Success(t *testing.T) {
 
 func TestGroupService_CreateGroup_GroupAlreadyExists(t *testing.T) {
 	mockRepo := mocks.NewGroupRepository(t)
-	svc := service.NewGroupService(mockRepo, &config.Config{})
+	svc := service.NewGroupService(mockRepo, &config.Config{}, nil)
 	ctx := context.Background()
 	mockRepo.On("CreateGroup", ctx, "SE-2430", "SE", 2024).Return(nil,
 		errs.ErrGroupAlreadyExists)
@@ -48,7 +48,7 @@ func TestGroupService_CreateGroup_GroupAlreadyExists(t *testing.T) {
 
 func TestGroupService_CreateGroup_InternalError(t *testing.T) {
 	mockRepo := mocks.NewGroupRepository(t)
-	svc := service.NewGroupService(mockRepo, &config.Config{})
+	svc := service.NewGroupService(mockRepo, &config.Config{}, nil)
 	ctx := context.Background()
 	mockRepo.On("CreateGroup", ctx, "SE-2430", "SE", 2024).Return(nil, status.Error(codes.Internal, "internal error"))
 	group, err := svc.CreateGroup(ctx, "SE-2430", "SE", 2024)
@@ -60,7 +60,7 @@ func TestGroupService_CreateGroup_InternalError(t *testing.T) {
 
 func TestGroupService_GetGroup_Success(t *testing.T) {
 	mockRepo := mocks.NewGroupRepository(t)
-	svc := service.NewGroupService(mockRepo, &config.Config{})
+	svc := service.NewGroupService(mockRepo, &config.Config{}, nil)
 	ctx := context.Background()
 	mockRepo.On("GetGroup", ctx, "a9f3d25d-05b3-4f04-94bc-78405513eed1").Return(
 		&groupv1.Group{
@@ -76,7 +76,7 @@ func TestGroupService_GetGroup_Success(t *testing.T) {
 }
 func TestGroupService_GetGroup_NotFound(t *testing.T) {
 	mockRepo := mocks.NewGroupRepository(t)
-	svc := service.NewGroupService(mockRepo, &config.Config{})
+	svc := service.NewGroupService(mockRepo, &config.Config{}, nil)
 	ctx := context.Background()
 	mockRepo.On("GetGroup", ctx, "a9f3d25d-05b3-4f04-94bc-78405513eed").Return(
 		nil, errs.ErrGroupNotFound)
@@ -89,7 +89,7 @@ func TestGroupService_GetGroup_NotFound(t *testing.T) {
 
 func TestGroupService_GetGroup_InternalError(t *testing.T) {
 	mockRepo := mocks.NewGroupRepository(t)
-	svc := service.NewGroupService(mockRepo, &config.Config{})
+	svc := service.NewGroupService(mockRepo, &config.Config{}, nil)
 	ctx := context.Background()
 	mockRepo.On("GetGroup", ctx, "a9f3d25d-05b3-4f04-94bc-78405513eed").Return(
 		nil, errors.New("db is down"))
@@ -106,7 +106,7 @@ func TestGroupService_GetGroup_InternalError(t *testing.T) {
 
 func TestGroupService_AddUserToGroup_Success(t *testing.T) {
 	mockRepo := mocks.NewGroupRepository(t)
-	svc := service.NewGroupService(mockRepo, &config.Config{})
+	svc := service.NewGroupService(mockRepo, &config.Config{}, nil)
 	ctx := context.Background()
 	groupID := "g-123"
 	userID := "u-456"
@@ -122,7 +122,7 @@ func TestGroupService_AddUserToGroup_Success(t *testing.T) {
 
 func TestGroupService_AddUserToGroup_UserOrGroupNotExists(t *testing.T) {
 	mockRepo := mocks.NewGroupRepository(t)
-	svc := service.NewGroupService(mockRepo, &config.Config{})
+	svc := service.NewGroupService(mockRepo, &config.Config{}, nil)
 	ctx := context.Background()
 	groupID := "g-123"
 	userID := "u-456"
@@ -138,7 +138,7 @@ func TestGroupService_AddUserToGroup_UserOrGroupNotExists(t *testing.T) {
 
 func TestGroupService_AddUserToGroup_InternalError(t *testing.T) {
 	mockRepo := mocks.NewGroupRepository(t)
-	svc := service.NewGroupService(mockRepo, &config.Config{})
+	svc := service.NewGroupService(mockRepo, &config.Config{}, nil)
 	ctx := context.Background()
 	groupID := "g-123"
 	userID := "u-456"
@@ -152,7 +152,7 @@ func TestGroupService_AddUserToGroup_InternalError(t *testing.T) {
 
 func TestGroupService_RemoveUserFromGroup_Success(t *testing.T) {
 	mockRepo := mocks.NewGroupRepository(t)
-	svc := service.NewGroupService(mockRepo, &config.Config{})
+	svc := service.NewGroupService(mockRepo, &config.Config{}, nil)
 	ctx := context.Background()
 	groupID := "g-123"
 	userID := "u-456"
@@ -164,7 +164,7 @@ func TestGroupService_RemoveUserFromGroup_Success(t *testing.T) {
 }
 func TestGroupService_RemoveUserFromGroup_UserOrGroupNotExists(t *testing.T) {
 	mockRepo := mocks.NewGroupRepository(t)
-	svc := service.NewGroupService(mockRepo, &config.Config{})
+	svc := service.NewGroupService(mockRepo, &config.Config{}, nil)
 	ctx := context.Background()
 	groupID := "g-123"
 	userID := "u-456"
@@ -177,7 +177,7 @@ func TestGroupService_RemoveUserFromGroup_UserOrGroupNotExists(t *testing.T) {
 }
 func TestGroupService_RemoveUserFromGroup_InternalError(t *testing.T) {
 	mockRepo := mocks.NewGroupRepository(t)
-	svc := service.NewGroupService(mockRepo, &config.Config{})
+	svc := service.NewGroupService(mockRepo, &config.Config{}, nil)
 	ctx := context.Background()
 	groupID := "g-123"
 	userID := "u-456"
@@ -191,7 +191,7 @@ func TestGroupService_RemoveUserFromGroup_InternalError(t *testing.T) {
 
 func TestGroupService_ListUsersInGroup_Success(t *testing.T) {
 	mockRepo := mocks.NewGroupRepository(t)
-	svc := service.NewGroupService(mockRepo, &config.Config{})
+	svc := service.NewGroupService(mockRepo, &config.Config{}, nil)
 	ctx := context.Background()
 	groupID := "g-123"
 	mockRepo.On("ListUsersInGroup", ctx, groupID).Return([]*userv1.User{}, nil)
@@ -203,7 +203,7 @@ func TestGroupService_ListUsersInGroup_Success(t *testing.T) {
 
 func TestGroupService_ListUsersInGroup_Empty(t *testing.T) {
 	mockRepo := mocks.NewGroupRepository(t)
-	svc := service.NewGroupService(mockRepo, &config.Config{})
+	svc := service.NewGroupService(mockRepo, &config.Config{}, nil)
 	ctx := context.Background()
 	groupID := "g-123"
 
@@ -224,7 +224,7 @@ func TestGroupService_ListUsersInGroup_Empty(t *testing.T) {
 
 func TestGroupService_ListUsersInGroup_InternalError(t *testing.T) {
 	mockRepo := mocks.NewGroupRepository(t)
-	svc := service.NewGroupService(mockRepo, &config.Config{})
+	svc := service.NewGroupService(mockRepo, &config.Config{}, nil)
 	ctx := context.Background()
 	groupID := "g-123"
 	mockRepo.On("ListUsersInGroup", ctx, groupID).Return(nil, errors.New("internal error"))

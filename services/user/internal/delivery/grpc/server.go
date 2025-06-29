@@ -22,7 +22,7 @@ func Register(gRPCServer *grpc.Server, svc service.UserService) {
 }
 
 func (h *userServer) Login(ctx context.Context, request *userv1.LoginRequest) (*userv1.LoginResponse, error) {
-	if strings.TrimSpace(request.Barcode) == "" || strings.TrimSpace(request.Password) != "" {
+	if strings.TrimSpace(request.Barcode) == "" || strings.TrimSpace(request.Password) == "" {
 		return nil, status.Error(codes.InvalidArgument, errs.ErrMissingField.Error())
 	}
 	user, err := h.service.Login(ctx, request.Barcode, request.Password)
