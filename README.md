@@ -43,7 +43,7 @@
                          ↓
 +---------+    +---------+    +----------+    +--------------+
 |  Auth   |    |  User   |    |  Lesson  |    |  Attendance  |
-| Service|<--> | Service |<--> | Service |<--> |   Service    |
+| Service |<-> | Service |<-> | Service  |<-> |   Service    |
 +----+----+    +---------+    +----------+    +--------------+
      |                                          ↑
      ↓                                          |
