@@ -26,15 +26,28 @@ func New(connString string) (*PostgresRepo, error) {
 		return nil, fmt.Errorf("%s: failed to connect to database: %w", op, err)
 	}
 
+	// 1. сначала public для pgcrypto
+	_, err = pool.Exec(ctx, `SET search_path TO public`)
+	if err != nil {
+		log.Println(err)
+		return nil, fmt.Errorf("%s: failed to set search_path to public: %w", op, err)
+	}
+
+	_, err = pool.Exec(ctx, `CREATE EXTENSION IF NOT EXISTS "pgcrypto";`)
+	if err != nil {
+		log.Println(err)
+		return nil, fmt.Errorf("%s: failed to create pgcrypto extension: %w", op, err)
+	}
+
+	// 2. затем в user-схему
 	_, err = pool.Exec(ctx, `SET search_path TO "user"`)
 	if err != nil {
 		log.Println(err)
-		return nil, fmt.Errorf("%s: failed to set search_path: %w", op, err)
+		return nil, fmt.Errorf("%s: failed to set search_path to user: %w", op, err)
 	}
 
 	statements := []string{
-		`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`,
-
+		`CREATE SCHEMA IF NOT EXISTS "user";`,
 		`SET search_path TO "user";`,
 
 		`DO $$
@@ -48,29 +61,28 @@ func New(connString string) (*PostgresRepo, error) {
 		`CREATE TABLE IF NOT EXISTS roles (
 			id SERIAL PRIMARY KEY,
 			name TEXT UNIQUE NOT NULL
-		);
-		
-		CREATE TABLE IF NOT EXISTS users (
+		);`,
+
+		`CREATE TABLE IF NOT EXISTS users (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			name TEXT NOT NULL,
 			barcode TEXT UNIQUE NOT NULL,
 			password TEXT NOT NULL,
 			role_id INT REFERENCES roles(id)
-		);
-		
-		CREATE TABLE IF NOT EXISTS permissions (
+		);`,
+
+		`CREATE TABLE IF NOT EXISTS permissions (
 			id SERIAL PRIMARY KEY,
 			action TEXT UNIQUE NOT NULL
-		);
-		
-		
-		CREATE TABLE IF NOT EXISTS role_permissions (
+		);`,
+
+		`CREATE TABLE IF NOT EXISTS role_permissions (
 			role_id INT REFERENCES roles(id) ON DELETE CASCADE,
 			permission_id INT REFERENCES permissions(id) ON DELETE CASCADE,
 			PRIMARY KEY (role_id, permission_id)
-		);
-		
-		INSERT INTO roles (name) VALUES ('admin'), ('teacher'), ('student')
+		);`,
+
+		`INSERT INTO roles (name) VALUES ('admin'), ('teacher'), ('student')
 		ON CONFLICT DO NOTHING;`,
 	}
 

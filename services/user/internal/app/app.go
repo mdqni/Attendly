@@ -2,12 +2,13 @@ package app
 
 import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
+	"github.com/mdqni/Attendly/services/user/internal/client"
 	"github.com/mdqni/Attendly/services/user/internal/config"
 	"github.com/mdqni/Attendly/services/user/internal/delivery/grpc"
 	"github.com/mdqni/Attendly/services/user/internal/interceptor"
 	"github.com/mdqni/Attendly/services/user/internal/repository/postgres"
 	"github.com/mdqni/Attendly/services/user/internal/service"
-	"github.com/mdqni/Attendly/shared/rate_limit"
+	"github.com/mdqni/Attendly/shared/redisUtils"
 	g "google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -21,7 +22,7 @@ type App struct {
 	address string
 }
 
-func NewApp(cfg *config.Config, log *slog.Logger, address string, limiter *rate_limit.Limiter) *App {
+func NewApp(cfg *config.Config, log *slog.Logger, limiter *redisUtils.Limiter, group *client.GroupClient) *App {
 	const op = "app.NewApp"
 
 	recoveryOpts := []recovery.Option{
@@ -38,7 +39,7 @@ func NewApp(cfg *config.Config, log *slog.Logger, address string, limiter *rate_
 		panic(err)
 	}
 
-	svc := service.NewUserService(repo, limiter, cfg)
+	svc := service.NewUserService(repo, limiter, cfg, group)
 
 	server := g.NewServer(g.ChainUnaryInterceptor(
 		recovery.UnaryServerInterceptor(recoveryOpts...),
@@ -49,7 +50,7 @@ func NewApp(cfg *config.Config, log *slog.Logger, address string, limiter *rate_
 		svc,
 	)
 
-	return &App{server: server, log: log, address: address}
+	return &App{server: server, log: log, address: cfg.GRPC.Address}
 }
 
 func (a *App) Run() {

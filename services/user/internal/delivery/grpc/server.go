@@ -55,16 +55,6 @@ func (h *userServer) GetUser(ctx context.Context, req *userv1.GetUserRequest) (*
 	return &userv1.GetUserResponse{User: sanitizeUser(user)}, nil
 }
 
-func (h *userServer) IsInGroup(ctx context.Context, req *userv1.IsInGroupRequest) (*userv1.IsInGroupResponse, error) {
-	isInGroup, err := h.service.IsInGroup(ctx, req.GetUserId(), req.GetGroupId())
-	if err != nil {
-		return nil, err
-	}
-	return &userv1.IsInGroupResponse{
-		IsMember: isInGroup,
-	}, nil
-}
-
 func sanitizeUser(u *userv1.User) *userv1.User {
 	u.Password = ""
 	return u

@@ -1,4 +1,4 @@
-package rate_limit
+package redisUtils
 
 import (
 	"context"
@@ -24,7 +24,7 @@ func NewLimiter(client *redis.Client) *Limiter {
 }
 
 func (r *Limiter) Allow(ctx context.Context, key string, rate int, period time.Duration) (bool, error) {
-	op := "rate_limit.Allow"
+	op := "redisUtils.Allow"
 	res, err := r.l.Allow(ctx, key, redis_rate.Limit{
 		Rate:   rate,
 		Burst:  rate,
@@ -38,7 +38,7 @@ func (r *Limiter) Allow(ctx context.Context, key string, rate int, period time.D
 }
 
 func (r *Limiter) Reset(ctx context.Context, key string) error {
-	op := "rate_limit.reset"
+	op := "redisUtils.reset"
 	err := r.l.Reset(ctx, key)
 	if err != nil {
 		log.Println("op:", op, "rate limiter error:", err)

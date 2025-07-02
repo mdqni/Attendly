@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: attendly-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: attendly
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: attendly-redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  user:
+    build:
+      context: .
+      dockerfile: services/user/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "50051:50051"
+    environment:
+      - CONN_STRING=postgresql://postgres:postgres@postgres:5432/attendly?sslmode=disable
+      - REDIS_ADDR=redis:6379
+      - JWT_SECRET=SUPER-SECRET-CODE
+
+  group:
+    build:
+      context: .
+      dockerfile: services/group/Dockerfile
+    depends_on:
+      - user
+      - postgres
+    ports:
+      - "50052:50052"
+    environment:
+      - CONN_STRING=postgresql://postgres:postgres@postgres:5432/attendly?sslmode=disable
+      - REDIS_ADDR=redis:6379
+      - JWT_SECRET=SUPER-SECRET-CODE
+      - USER_SERVICE_ADDR=user:50051
+  qr:
+    build:
+      context: .
+      dockerfile: services/qr/Dockerfile
+    depends_on:
+      - redis
+    ports:
+      - "50054:50054"
+    environment:
+      - REDIS_ADDR=redis:6379
+      - JWT_SECRET=SUPER-SECRET-CODE
+
+volumes:
+  pgdata:

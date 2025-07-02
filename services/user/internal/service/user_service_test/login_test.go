@@ -7,8 +7,8 @@ import (
 	"github.com/mdqni/Attendly/services/user/internal/config"
 	"github.com/mdqni/Attendly/services/user/internal/repository/mocks"
 	"github.com/mdqni/Attendly/services/user/internal/service"
-	"github.com/mdqni/Attendly/services/user/internal/utils/passwordUtils"
 	errs "github.com/mdqni/Attendly/shared/errs"
+	"github.com/mdqni/Attendly/shared/passwordUtils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc/codes"
@@ -32,7 +32,7 @@ func TestLogin_Success(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	limiter := &fakeLimiter{}
 	cfg := config.MustLoad()
-	svc := service.NewUserService(mockRepo, limiter, cfg)
+	svc := service.NewUserService(mockRepo, limiter, cfg, nil)
 	password, err := passwordUtils.HashPassword("1234")
 	if err != nil {
 		log.Println(err)
@@ -63,7 +63,7 @@ func TestLogin_InvalidPassword(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	limiter := &fakeLimiter{}
 	cfg := config.MustLoad()
-	svc := service.NewUserService(mockRepo, limiter, cfg)
+	svc := service.NewUserService(mockRepo, limiter, cfg, nil)
 	correctHashed, _ := passwordUtils.HashPassword("correct-password")
 	user := &userv1.User{
 		Id:       "u-1",
@@ -88,7 +88,7 @@ func TestLogin_UserNotFound(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	limiter := &fakeLimiter{}
 	cfg := config.MustLoad()
-	svc := service.NewUserService(mockRepo, limiter, cfg)
+	svc := service.NewUserService(mockRepo, limiter, cfg, nil)
 
 	mockRepo.On("GetUserByBarcode", mock.Anything, "123456").Return(nil, errs.ErrUserNotFound)
 	resp, err := svc.Login(context.Background(), "123456", "1234")
@@ -121,7 +121,7 @@ func TestLogin_ResourceExhausted(t *testing.T) {
 	limiter := &limitedFakeLimiter{limit: 5}
 	cfg := config.MustLoad()
 
-	svc := service.NewUserService(mockRepo, limiter, cfg)
+	svc := service.NewUserService(mockRepo, limiter, cfg, nil)
 	user := &userv1.User{
 		Id:       "u-1",
 		Name:     "Test",

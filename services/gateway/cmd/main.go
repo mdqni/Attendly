@@ -22,7 +22,7 @@ func main() {
 	err := userv1.RegisterUserServiceHandlerFromEndpoint(
 		ctx,
 		mux,
-		"localhost:50051",
+		"0.0.0.0:50051",
 		opts,
 	)
 	if err != nil {

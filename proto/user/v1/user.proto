@@ -20,8 +20,6 @@ service UserService {
     };
   };
 
-  rpc IsInGroup (IsInGroupRequest) returns (IsInGroupResponse);
-
   rpc Login(LoginRequest) returns (LoginResponse){
     option(google.api.http) = {
       post: "/v1/auth/login",

@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package qr.v1;
+
+option go_package = "github.com/mdqni/Attendly/proto/gen/go/qr/v1;qrv1";
+
+service QRService {
+  rpc GenerateQR(GenerateQRRequest) returns (GenerateQRResponse);
+  rpc ValidateQR(ValidateQRRequest) returns (ValidateQRResponse);
+}
+
+message GenerateQRRequest {
+  string lesson_id = 1;
+  string teacher_id = 2;
+  int64 expires_unix = 3;
+}
+
+message GenerateQRResponse {
+  string qr_code = 1;
+}
+
+message ValidateQRRequest {
+  string qr_code = 1;
+}
+
+message ValidateQRResponse {
+  bool valid = 1;
+  string lesson_id = 2;
+}

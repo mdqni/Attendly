@@ -7,6 +7,7 @@ import (
 	"github.com/mdqni/Attendly/shared/interceptor"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"log"
 )
 
 type UserClient struct {
@@ -28,7 +29,8 @@ func NewUserClient(addr string) (*UserClient, error) {
 func (c *UserClient) GetUser(ctx context.Context, id string) (*userv1.User, error) {
 	resp, err := c.client.GetUser(ctx, &userv1.GetUserRequest{Id: id})
 	if err != nil {
-		return nil, err
+		log.Println(fmt.Errorf("failed to get user: %w", err))
+		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 	return resp.User, nil
 }

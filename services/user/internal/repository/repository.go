@@ -9,7 +9,6 @@ type UserRepository interface {
 	SaveUser(ctx context.Context, user *userv1.User) error
 	GetUserById(ctx context.Context, barcode string) (*userv1.User, error)
 	GetUserByBarcode(ctx context.Context, barcode string) (*userv1.User, error)
-	CheckUserInGroup(ctx context.Context, userID, groupID string) (bool, error)
 	HasPermission(ctx context.Context, userID, action string) (bool, error)
 	GetPermissions(ctx context.Context, userID string) ([]string, error)
 }

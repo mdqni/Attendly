@@ -1,66 +1,37 @@
 package config
 
 import (
-	"flag"
 	"github.com/ilyakaznacheev/cleanenv"
 	"log"
-	"os"
-	"sync"
 	"time"
 )
 
 type Config struct {
-	Env            string     `yaml:"env" env-default:"local"`
-	ConnString     string     `env:"CONN_STRING" env-default:"postgresql://postgres:postgres@localhost:5432/attendly?sslmode=disable"`
-	JwtSecret      string     `env:"JWT_SECRET" env-default:"SUPER-SECRET-CODE"`
-	GRPC           GRPCConfig `yaml:"grpc"`
-	MigrationsPath string
-	TokenTTL       time.Duration `yaml:"token_ttl" env-default:"1h"`
-	Redis          RedisConfig   `yaml:"redis"`
+	Env              string     `yaml:"env" env-default:"local"`
+	ConnString       string     `yaml:"connString" env:"CONN_STRING" env-default:"postgresql://postgres:postgres@localhost:5432/attendly?sslmode=disable&search_path=user"`
+	JwtSecret        string     `yaml:"jwtSecret" env:"JWT_SECRET" env-default:"SUPER-SECRET-CODE"`
+	GRPC             GRPCConfig `yaml:"grpc"`
+	MigrationsPath   string
+	TokenTTL         time.Duration `yaml:"token_ttl" env-default:"1h"`
+	Redis            RedisConfig   `yaml:"redis"`
+	GroupServiceAddr string        `yaml:"groupServiceAddr" env:"GROUP_SERVICE_ADDR" env-default:"0.0.0.0:50051"`
 }
 
 type RedisConfig struct {
-	Addr string `yaml:"addr" env-default:"localhost:6379"`
+	Addr string `yaml:"addr" env-default:"redis:6379"`
 }
 
 type GRPCConfig struct {
-	Address string        `yaml:"address" env-default:"localhost:50051"`
-	Timeout time.Duration `yaml:"timeout"`
+	Address string        `yaml:"address" env-default:"0.0.0.0:50051"`
+	Timeout time.Duration `yaml:"timeout" env-default:"1h"`
 }
 
 func MustLoad() *Config {
-	configPath := fetchConfigPath()
-	if configPath == "" {
-		configPath = "./config/config.yaml"
-	}
-
 	cfg := Config{}
 
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		log.Println("config file not found, using defaults")
-		return &cfg
-	}
-
-	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
-		panic("config parse error: " + err.Error())
+	if err := cleanenv.ReadEnv(&cfg); err != nil {
+		log.Fatal("failed to load env vars: ", err)
 	}
 
 	return &cfg
-}
-
-var once sync.Once
-
-func fetchConfigPath() string {
-	var res string
-
-	once.Do(func() {
-		flag.StringVar(&res, "config", "", "path to config file")
-		flag.Parse()
-	})
-
-	if res == "" {
-		res = os.Getenv("CONFIG_PATH")
-	}
-
-	return res
 }

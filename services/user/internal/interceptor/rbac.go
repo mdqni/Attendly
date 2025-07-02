@@ -2,7 +2,7 @@ package interceptor
 
 import (
 	"context"
-	"github.com/mdqni/Attendly/services/user/internal/utils/token"
+	"github.com/mdqni/Attendly/shared/token"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -25,6 +25,7 @@ func RBACInterceptor(secret string) grpc.UnaryServerInterceptor {
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
+		_, err := handler(ctx, req)
 		if _, ok := openMethods[info.FullMethod]; ok {
 			return handler(ctx, req)
 		}

@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	app2 "github.com/mdqni/Attendly/services/user/internal/app"
+	"github.com/mdqni/Attendly/services/user/internal/client"
 	"github.com/mdqni/Attendly/services/user/internal/config"
-	"github.com/mdqni/Attendly/shared/rate_limit"
+	"github.com/mdqni/Attendly/shared/redisUtils"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -21,18 +22,25 @@ const (
 func main() {
 	cfg := config.MustLoad()
 
+	app2.RunMigrations(cfg.ConnString)
+
 	log := setupLogger(cfg.Env)
 	fmt.Println("DB:", cfg.ConnString)
 	fmt.Println("JWT:", cfg.JwtSecret)
-	rdb := rate_limit.NewRedisClient(cfg.Redis.Addr)
-	limiter := rate_limit.NewLimiter(rdb)
+	rdb := redisUtils.NewRedisClient(cfg.Redis.Addr)
+	limiter := redisUtils.NewLimiter(rdb)
 	pong, err := rdb.Ping(context.Background()).Result()
 	if err != nil {
 		log.Error("Redis connection failed: %v", err)
 	}
 	fmt.Println("Redis PING OK:", pong)
 
-	app := app2.NewApp(cfg, log, cfg.GRPC.Address, limiter)
+	group, err := client.NewGroupClient(cfg.GroupServiceAddr)
+
+	if err != nil {
+		log.Error("Group client failed: %v", err)
+	}
+	app := app2.NewApp(cfg, log, limiter, group)
 	go func() {
 		app.Run()
 	}()

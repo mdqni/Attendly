@@ -4,6 +4,7 @@ package group.v1;
 import "google/api/annotations.proto";
 import "google/api/http.proto";
 import "user/v1/user.proto";
+import "qr/v1/qr.proto";
 option go_package = "github.com/mdqni/Attendly/proto/gen/go/group/v1;groupv1";
 
 
@@ -37,6 +38,11 @@ service GroupService {
       get: "/v1/group/{group_id}/users"
     };
   };
+  rpc IsInGroup (IsInGroupRequest) returns (IsInGroupResponse) {
+    option (google.api.http) = {
+      get: "/v1/group/{group_id}/user/{user_id}/check"
+    };
+  }
 }
 
 
@@ -45,6 +51,15 @@ message Group {
   string name = 2;
   string department = 3;
   int32 year = 4;
+}
+
+message IsInGroupRequest {
+  string group_id = 1;
+  string user_id = 2;
+}
+
+message IsInGroupResponse {
+  bool is_member = 1;
 }
 
 message ListUsersInGroupRequest{

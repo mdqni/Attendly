@@ -18,7 +18,7 @@ func TestRegister_Success(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	limiter := &fakeLimiter{}
 	cfg := config.MustLoad()
-	svc := service.NewUserService(mockRepo, limiter, cfg)
+	svc := service.NewUserService(mockRepo, limiter, cfg, nil)
 
 	user := &userv1.User{
 		Name:     "John Johnson",
@@ -40,7 +40,7 @@ func TestRegister_EmptyFields(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	limiter := &fakeLimiter{}
 	cfg := config.MustLoad()
-	svc := service.NewUserService(mockRepo, limiter, cfg)
+	svc := service.NewUserService(mockRepo, limiter, cfg, nil)
 
 	created, err := svc.Register(context.Background(), "", "", "", "")
 
@@ -53,7 +53,7 @@ func TestRegister_FailToSaveUser(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	limiter := &fakeLimiter{}
 	cfg := config.MustLoad()
-	svc := service.NewUserService(mockRepo, limiter, cfg)
+	svc := service.NewUserService(mockRepo, limiter, cfg, nil)
 	user := &userv1.User{
 		Name:     "John Johnson",
 		Barcode:  "123456",
@@ -72,7 +72,7 @@ func TestRegister_UserAlreadyExists(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	limiter := &fakeLimiter{}
 	cfg := config.MustLoad()
-	svc := service.NewUserService(mockRepo, limiter, cfg)
+	svc := service.NewUserService(mockRepo, limiter, cfg, nil)
 	user := &userv1.User{
 		Name:     "John Johnson",
 		Barcode:  "123456",
@@ -91,7 +91,7 @@ func TestRegister_ShortPassword(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	limiter := &fakeLimiter{}
 	cfg := config.MustLoad()
-	svc := service.NewUserService(mockRepo, limiter, cfg)
+	svc := service.NewUserService(mockRepo, limiter, cfg, nil)
 
 	created, err := svc.Register(context.Background(), "John", "123456", "123", "student")
 	assert.Error(t, err)
@@ -106,7 +106,7 @@ func TestRegister_GetUserByBarcodeError(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	limiter := &fakeLimiter{}
 	cfg := config.MustLoad()
-	svc := service.NewUserService(mockRepo, limiter, cfg)
+	svc := service.NewUserService(mockRepo, limiter, cfg, nil)
 
 	mockRepo.On("GetUserByBarcode", mock.Anything, "123456").
 		Return(nil, status.Error(codes.Internal, "failed to check user"))

@@ -5,12 +5,13 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	userv1 "github.com/mdqni/Attendly/proto/gen/go/user/v1"
+	"github.com/mdqni/Attendly/services/user/internal/client"
 	"github.com/mdqni/Attendly/services/user/internal/config"
 	"github.com/mdqni/Attendly/services/user/internal/repository"
-	passwordUtils "github.com/mdqni/Attendly/services/user/internal/utils/passwordUtils"
-	"github.com/mdqni/Attendly/services/user/internal/utils/token"
 	errs "github.com/mdqni/Attendly/shared/errs"
-	"github.com/mdqni/Attendly/shared/rate_limit"
+	"github.com/mdqni/Attendly/shared/passwordUtils"
+	"github.com/mdqni/Attendly/shared/redisUtils"
+	"github.com/mdqni/Attendly/shared/token"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"log"
@@ -18,12 +19,13 @@ import (
 )
 
 type userService struct {
-	repo    repository.UserRepository
-	limiter rate_limit.LimiterInterface
-	cfg     *config.Config
+	repo        repository.UserRepository
+	limiter     redisUtils.LimiterInterface
+	cfg         *config.Config
+	groupClient *client.GroupClient
 }
 
-func NewUserService(repo repository.UserRepository, limiter rate_limit.LimiterInterface, cfg *config.Config) UserService {
+func NewUserService(repo repository.UserRepository, limiter redisUtils.LimiterInterface, cfg *config.Config, group *client.GroupClient) UserService {
 	if limiter == nil {
 		panic("rate limiter is nil")
 	}
@@ -39,10 +41,7 @@ func (s *userService) Register(ctx context.Context, name, barcode, password, rol
 	}
 
 	exists, err := s.repo.GetUserByBarcode(ctx, barcode)
-	if err != nil {
-		log.Println("error checking user existence:", err)
-		return nil, status.Error(codes.Internal, "failed to check user")
-	}
+
 	if exists != nil {
 		return nil, status.Error(codes.AlreadyExists, errs.ErrUserAlreadyExists.Error())
 	}
@@ -125,10 +124,6 @@ func (s *userService) GetUserById(ctx context.Context, id string) (*userv1.User,
 
 func (s *userService) GetUserByBarcode(ctx context.Context, barcode string) (*userv1.User, error) {
 	return s.repo.GetUserByBarcode(ctx, barcode)
-}
-
-func (s *userService) IsInGroup(ctx context.Context, userID, groupID string) (bool, error) {
-	return s.repo.CheckUserInGroup(ctx, userID, groupID)
 }
 
 func (s *userService) HasPermission(ctx context.Context, userID, action string) (bool, error) {
