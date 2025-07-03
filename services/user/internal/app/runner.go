@@ -1,27 +1,35 @@
 package app
 
 import (
-	"database/sql"
-	_ "github.com/lib/pq"
-	"github.com/pressly/goose/v3"
 	"log"
-	"os"
-	"path/filepath"
+	"time"
+
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-func RunMigrations(connString string) {
-	db, err := sql.Open("postgres", connString)
-	if err != nil {
-		log.Fatalf("failed to open DB: %v", err)
-	}
-	defer db.Close()
+func RunMigrations(connString string, migrationsPath string) {
+	var m *migrate.Migrate
+	var err error
 
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Fatalf("failed to get working dir: %v", err)
+	for i := 0; i < 10; i++ {
+		m, err = migrate.New("file://"+migrationsPath, connString)
+		if err == nil {
+			break
+		}
+		log.Printf("Migration tool not ready yet (%d/10), retrying in 3s...: %v", i+1, err)
+		time.Sleep(3 * time.Second)
 	}
-	migrationPath := filepath.Join(wd, "services/user/internal/migrations")
-	if err := goose.Up(db, migrationPath); err != nil {
+	if err != nil {
+		log.Fatalf("failed to create migrate instance: %v", err)
+	}
+
+	defer m.Close()
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 		log.Fatalf("failed to run migrations: %v", err)
 	}
+
+	log.Println("Migrations applied successfully")
 }

@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	Env              string     `yaml:"env" env-default:"local"`
-	ConnString       string     `yaml:"connString" env:"CONN_STRING" env-default:"postgresql://postgres:postgres@localhost:5432/attendly?sslmode=disable&search_path=user"`
+	ConnString       string     `yaml:"connString" env:"CONN_STRING" env-default:"postgresql://postgres:postgres@localhost:5432/attendly?sslmode=disable"`
 	JwtSecret        string     `yaml:"jwtSecret" env:"JWT_SECRET" env-default:"SUPER-SECRET-CODE"`
 	GRPC             GRPCConfig `yaml:"grpc"`
 	MigrationsPath   string

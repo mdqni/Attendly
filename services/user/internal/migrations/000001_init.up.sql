@@ -1,10 +1,15 @@
--- +goose Up
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
 CREATE SCHEMA IF NOT EXISTS "user";
 SET search_path TO "user";
 
-DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'role_status') THEN CREATE TYPE role_status AS ENUM ('student', 'teacher', 'admin'); END IF; END $$;
+DO
+$$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'role_status') THEN
+            CREATE TYPE role_status AS ENUM ('student', 'teacher', 'admin');
+        END IF;
+    END
+$$;
 
 CREATE TABLE IF NOT EXISTS roles
 (
@@ -39,14 +44,3 @@ VALUES ('admin'),
        ('teacher'),
        ('student')
 ON CONFLICT DO NOTHING;
-
--- +goose Down
-SET search_path TO "user";
-
-DROP TABLE IF EXISTS role_permissions;
-DROP TABLE IF EXISTS permissions;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS roles;
-DROP TYPE IF EXISTS role_status;
-DROP SCHEMA IF EXISTS "user" CASCADE;
-DROP EXTENSION IF EXISTS "pgcrypto";

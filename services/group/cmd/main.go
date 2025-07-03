@@ -22,7 +22,7 @@ const (
 func main() {
 	cfg := config.MustLoad()
 
-	app2.RunMigrations(cfg.ConnString)
+	app2.RunMigrations(cfg.ConnString, "/app/internal/migrations")
 
 	log := setupLogger(cfg.Env)
 

@@ -1,0 +1,6 @@
+SET search_path TO "group";
+
+DROP TABLE IF EXISTS user_groups;
+DROP TABLE IF EXISTS groups;
+DROP SCHEMA IF EXISTS "group" CASCADE;
+DROP EXTENSION IF EXISTS "pgcrypto";
