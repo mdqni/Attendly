@@ -9,7 +9,6 @@
   <img src="https://img.shields.io/badge/Kafka-000000?style=for-the-badge&logo=apache-kafka&logoColor=white" />
   <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
 </p>
----
 
 ## 🧠 About Attendly  
 **Attendly** is a scalable attendance tracking system built with a microservice architecture.  
