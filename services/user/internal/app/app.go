@@ -11,15 +11,18 @@ import (
 	"github.com/mdqni/Attendly/shared/redisUtils"
 	g "google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
 	"log/slog"
 	"net"
 )
 
 type App struct {
-	server  *g.Server
-	log     *slog.Logger
-	address string
+	server       *g.Server
+	log          *slog.Logger
+	address      string
+	healthServer *health.Server
 }
 
 func NewApp(cfg *config.Config, log *slog.Logger, limiter *redisUtils.Limiter, group *client.GroupClient) *App {
@@ -49,8 +52,10 @@ func NewApp(cfg *config.Config, log *slog.Logger, limiter *redisUtils.Limiter, g
 		server,
 		svc,
 	)
+	hs := health.NewServer()
+	healthpb.RegisterHealthServer(server, hs)
 
-	return &App{server: server, log: log, address: cfg.GRPC.Address}
+	return &App{server: server, log: log, address: cfg.GRPC.Address, healthServer: hs}
 }
 
 func (a *App) Run() {
@@ -59,6 +64,7 @@ func (a *App) Run() {
 	if err != nil {
 		panic(err)
 	}
+	a.healthServer.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
 
 	a.log.Info("grpc server started", "op:", op, slog.String("addr", lis.Addr().String()))
 	if err := a.server.Serve(lis); err != nil {

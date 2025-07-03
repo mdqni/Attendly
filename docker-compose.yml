@@ -53,7 +53,7 @@ services:
       postgres:
         condition: service_healthy
       user:
-        condition: service_healthy
+        condition: service_started
     ports:
       - "50052:50052"
     environment:
@@ -61,6 +61,11 @@ services:
       - REDIS_ADDR=redis:6379
       - JWT_SECRET=SUPER-SECRET-CODE
       - USER_SERVICE_ADDR=user:50051
+    healthcheck:
+      test: [ "CMD", "grpc_health_probe", "-addr=localhost:50052" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
   qr:
     build:
       context: .

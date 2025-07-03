@@ -25,14 +25,16 @@ func main() {
 	app2.RunMigrations(cfg.ConnString, "/app/internal/migrations")
 
 	log := setupLogger(cfg.Env)
-	fmt.Println("DB:", cfg.ConnString)
-	fmt.Println("JWT:", cfg.JwtSecret)
+
 	rdb := redisUtils.NewRedisClient(cfg.Redis.Addr)
+
 	limiter := redisUtils.NewLimiter(rdb)
+
 	pong, err := rdb.Ping(context.Background()).Result()
 	if err != nil {
 		log.Error("Redis connection failed: %v", err)
 	}
+
 	fmt.Println("Redis PING OK:", pong)
 
 	group, err := client.NewGroupClient(cfg.GroupServiceAddr)
