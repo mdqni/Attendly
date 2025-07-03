@@ -13,6 +13,11 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   redis:
     image: redis:7-alpine
@@ -26,8 +31,13 @@ services:
       context: .
       dockerfile: services/user/Dockerfile
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "grpc_health_probe", "-addr=localhost:50051" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     ports:
       - "50051:50051"
     environment:
@@ -40,8 +50,10 @@ services:
       context: .
       dockerfile: services/group/Dockerfile
     depends_on:
-      - user
-      - postgres
+      postgres:
+        condition: service_healthy
+      user:
+        condition: service_healthy
     ports:
       - "50052:50052"
     environment:
@@ -60,6 +72,11 @@ services:
     environment:
       - REDIS_ADDR=redis:6379
       - JWT_SECRET=SUPER-SECRET-CODE
+    healthcheck:
+      test: [ "CMD", "grpc_health_probe", "-addr=localhost:50054" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 volumes:
   pgdata:
