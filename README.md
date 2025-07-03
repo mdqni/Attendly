@@ -101,10 +101,10 @@ proto/            # .proto definitions
 
 ## 🚧 In Progress
 
-[] Notifications via Kafka
-[] WebSocket support for real-time check-ins
-[] CI/CD with GitHub Actions
-[] Grafana dashboards for monitoring
+* Notifications via Kafka  
+* WebSocket support for real-time check-ins  
+* CI/CD with GitHub Actions  
+* Grafana dashboards for monitoring  
 
 ---
 
