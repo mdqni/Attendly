@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package auth.v1;
+
+import "google/api/annotations.proto";
+import "user/v1/user.proto";
+
+option go_package = "github.com/mdqni/Attendly/proto/gen/go/auth/v1;authv1";
+
+service AuthService {
+  rpc Register (RegisterRequest) returns (AuthResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/register"
+      body: "*"
+    };
+  }
+
+  rpc Login (LoginRequest) returns (AuthResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/login"
+      body: "*"
+    };
+  }
+
+  rpc ValidateToken (ValidateTokenRequest) returns (ValidateTokenResponse);
+}
+
+message RegisterRequest {
+  string name = 1;
+  string barcode = 2;
+  string password = 3;
+  string role = 4; // student, teacher, admin
+}
+
+message LoginRequest {
+  string barcode = 1;
+  string password = 2;
+}
+
+message AuthResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  user.v1.User user = 3;
+}
+
+message ValidateTokenRequest {
+  string access_token = 1;
+}
+
+message ValidateTokenResponse {
+  string user_id = 1;
+  string role = 2;
+  repeated string permissions = 3;
+}

@@ -1,31 +1,29 @@
 syntax = "proto3";
 
 package user.v1;
+
 import "google/api/annotations.proto";
-import "google/api/http.proto";
 
 option go_package = "github.com/mdqni/Attendly/proto/gen/go/user/v1;userv1";
 
 service UserService {
-  rpc Register (RegisterRequest) returns (RegisterResponse) {
-    option(google.api.http) = {
-      post: "/v1/auth/register",
-      body: "*"
-    };
-  };
-
   rpc GetUser (GetUserRequest) returns (GetUserResponse) {
-    option(google.api.http) = {
+    option (google.api.http) = {
       get: "/v1/users/{id}"
     };
-  };
+  }
 
-  rpc Login(LoginRequest) returns (LoginResponse){
-    option(google.api.http) = {
-      post: "/v1/auth/login",
-      body: "*"
+  rpc GetUsers (GetUsersRequest) returns (GetUsersResponse) {
+    option (google.api.http) = {
+      get: "/v1/users"
     };
-  };
+  }
+
+  rpc IsInGroup (IsInGroupRequest) returns (IsInGroupResponse) {
+    option (google.api.http) = {
+      get: "/v1/users/{user_id}/groups/{group_id}/check"
+    };
+  }
 }
 
 message User {
@@ -33,28 +31,7 @@ message User {
   string name = 2;
   string barcode = 3;
   string role = 4;       // "student", "teacher", "admin"
-  string password = 5;
-}
 
-message RegisterRequest {
-  string name = 1;
-  string barcode = 2;
-  string password = 3;
-  string role = 4;
-}
-
-message LoginRequest {
-  string barcode = 1;
-  string password = 2;
-}
-
-message LoginResponse {
-  string token = 1;
-  User user = 2;
-}
-
-message RegisterResponse {
-  User user = 1;
 }
 
 message GetUserRequest {
@@ -63,6 +40,12 @@ message GetUserRequest {
 
 message GetUserResponse {
   User user = 1;
+}
+
+message GetUsersRequest {}
+
+message GetUsersResponse {
+  repeated User users = 1;
 }
 
 message IsInGroupRequest {

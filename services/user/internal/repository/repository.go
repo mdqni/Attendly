@@ -3,12 +3,12 @@ package repository
 import (
 	"context"
 	userv1 "github.com/mdqni/Attendly/proto/gen/go/user/v1"
+	"github.com/mdqni/Attendly/services/user/internal/repository/postgres"
 )
 
 type UserRepository interface {
-	SaveUser(ctx context.Context, user *userv1.User) error
-	GetUserById(ctx context.Context, barcode string) (*userv1.User, error)
-	GetUserByBarcode(ctx context.Context, barcode string) (*userv1.User, error)
-	HasPermission(ctx context.Context, userID, action string) (bool, error)
-	GetPermissions(ctx context.Context, userID string) ([]string, error)
+	GetUserById(ctx context.Context, id string) (*postgres.InternalUser, error)
+	GetUserByBarcode(ctx context.Context, barcode string) (*postgres.InternalUser, error)
+	IsUserInGroup(ctx context.Context, userID string, groupID string) (bool, error)
+	GetAllUsers(ctx context.Context) ([]*userv1.User, error)
 }

@@ -16,14 +16,14 @@
     "application/json"
   ],
   "paths": {
-    "/v1/auth/login": {
-      "post": {
-        "operationId": "UserService_Login",
+    "/v1/users": {
+      "get": {
+        "operationId": "UserService_GetUsers",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1LoginResponse"
+              "$ref": "#/definitions/v1GetUsersResponse"
             }
           },
           "default": {
@@ -33,48 +33,6 @@
             }
           }
         },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1LoginRequest"
-            }
-          }
-        ],
-        "tags": [
-          "UserService"
-        ]
-      }
-    },
-    "/v1/auth/register": {
-      "post": {
-        "operationId": "UserService_Register",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1RegisterResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1RegisterRequest"
-            }
-          }
-        ],
         "tags": [
           "UserService"
         ]
@@ -100,6 +58,42 @@
         "parameters": [
           {
             "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/v1/users/{userId}/groups/{groupId}/check": {
+      "get": {
+        "operationId": "UserService_IsInGroup",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1IsInGroupResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "groupId",
             "in": "path",
             "required": true,
             "type": "string"
@@ -148,50 +142,23 @@
         }
       }
     },
-    "v1LoginRequest": {
+    "v1GetUsersResponse": {
       "type": "object",
       "properties": {
-        "barcode": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1User"
+          }
         }
       }
     },
-    "v1LoginResponse": {
+    "v1IsInGroupResponse": {
       "type": "object",
       "properties": {
-        "token": {
-          "type": "string"
-        },
-        "user": {
-          "$ref": "#/definitions/v1User"
-        }
-      }
-    },
-    "v1RegisterRequest": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "barcode": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        },
-        "role": {
-          "type": "string"
-        }
-      }
-    },
-    "v1RegisterResponse": {
-      "type": "object",
-      "properties": {
-        "user": {
-          "$ref": "#/definitions/v1User"
+        "isMember": {
+          "type": "boolean"
         }
       }
     },
@@ -210,9 +177,6 @@
         "role": {
           "type": "string",
           "title": "\"student\", \"teacher\", \"admin\""
-        },
-        "password": {
-          "type": "string"
         }
       }
     }

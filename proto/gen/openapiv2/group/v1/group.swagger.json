@@ -356,9 +356,6 @@
         "role": {
           "type": "string",
           "title": "\"student\", \"teacher\", \"admin\""
-        },
-        "password": {
-          "type": "string"
         }
       }
     }

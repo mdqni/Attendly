@@ -5,9 +5,9 @@ import (
 	"github.com/mdqni/Attendly/services/user/internal/client"
 	"github.com/mdqni/Attendly/services/user/internal/config"
 	"github.com/mdqni/Attendly/services/user/internal/delivery/grpc"
-	"github.com/mdqni/Attendly/services/user/internal/interceptor"
 	"github.com/mdqni/Attendly/services/user/internal/repository/postgres"
 	"github.com/mdqni/Attendly/services/user/internal/service"
+	"github.com/mdqni/Attendly/shared/interceptor"
 	"github.com/mdqni/Attendly/shared/redisUtils"
 	g "google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -42,7 +42,7 @@ func NewApp(cfg *config.Config, log *slog.Logger, limiter *redisUtils.Limiter, g
 		panic(err)
 	}
 
-	svc := service.NewUserService(repo, limiter, cfg, group)
+	svc := service.NewUserService(repo, cfg, group)
 
 	server := g.NewServer(g.ChainUnaryInterceptor(
 		recovery.UnaryServerInterceptor(recoveryOpts...),

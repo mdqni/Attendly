@@ -1,0 +1,67 @@
+package grpc
+
+import (
+	"context"
+	authv1 "github.com/mdqni/Attendly/proto/gen/go/auth/v1"
+	"github.com/mdqni/Attendly/services/auth/internal/service"
+	"github.com/mdqni/Attendly/shared/errs"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"log"
+	"strings"
+)
+
+type authServer struct {
+	authv1.UnimplementedAuthServiceServer
+	service service.AuthService
+}
+
+func Register(gRPCServer *grpc.Server, svc service.AuthService) {
+	authv1.RegisterAuthServiceServer(gRPCServer, &authServer{service: svc})
+}
+
+func (h *authServer) Login(ctx context.Context, req *authv1.LoginRequest) (*authv1.AuthResponse, error) {
+	if strings.TrimSpace(req.Barcode) == "" || strings.TrimSpace(req.Password) == "" {
+		return nil, status.Error(codes.InvalidArgument, errs.ErrMissingField.Error())
+	}
+
+	resp, err := h.service.Login(ctx, service.LoginInput{
+		Barcode:  req.GetBarcode(),
+		Password: req.GetPassword(),
+	})
+	if err != nil {
+		log.Println("login error:", err)
+		return nil, err
+	}
+
+	return &authv1.AuthResponse{
+		AccessToken:  resp.AccessToken,
+		RefreshToken: resp.RefreshToken,
+	}, nil
+}
+
+func (h *authServer) Register(ctx context.Context, req *authv1.RegisterRequest) (*authv1.AuthResponse, error) {
+	if strings.TrimSpace(req.Name) == "" ||
+		strings.TrimSpace(req.Barcode) == "" ||
+		strings.TrimSpace(req.Password) == "" ||
+		strings.TrimSpace(req.Role) == "" {
+		return nil, status.Error(codes.InvalidArgument, errs.ErrMissingField.Error())
+	}
+
+	resp, err := h.service.Register(ctx, service.RegisterInput{
+		Name:     req.GetName(),
+		Barcode:  req.GetBarcode(),
+		Password: req.GetPassword(),
+		Role:     req.GetRole(),
+	})
+	if err != nil {
+		log.Println("register error:", err)
+		return nil, err
+	}
+
+	return &authv1.AuthResponse{
+		AccessToken:  resp.AccessToken,
+		RefreshToken: resp.RefreshToken,
+	}, nil
+}
