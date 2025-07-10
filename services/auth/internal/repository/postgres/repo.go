@@ -53,8 +53,8 @@ func (r *PostgresRepo) SaveUser(ctx context.Context, user model.UserWithPassword
 func (r *PostgresRepo) GetUserByBarcode(ctx context.Context, barcode string) (*model.UserWithPassword, error) {
 	row := r.db.QueryRow(ctx, `
         SELECT u.id,u.name,u.barcode,u.password,r.name
-        FROM auth.users u
-        JOIN auth.roles r ON u.role_id=r.id
+        FROM "auth".users u
+        JOIN "auth".roles r ON u.role_id=r.id
         WHERE u.barcode=$1
     `, barcode)
 
@@ -71,10 +71,10 @@ func (r *PostgresRepo) GetUserByBarcode(ctx context.Context, barcode string) (*m
 func (r *PostgresRepo) GetPermissions(ctx context.Context, userID string) ([]string, error) {
 	rows, err := r.db.Query(ctx, `
         SELECT p.action
-        FROM auth.role_permissions rp
-        JOIN auth.permissions p ON rp.permission_id=p.id
+        FROM "auth".role_permissions rp
+        JOIN "auth".permissions p ON rp.permission_id=p.id
         WHERE rp.role_id=(
-            SELECT role_id FROM auth.users WHERE id=$1
+            SELECT role_id FROM "auth".users WHERE id=$1
         )
     `, userID)
 	if err != nil {
@@ -95,7 +95,7 @@ func (r *PostgresRepo) GetPermissions(ctx context.Context, userID string) ([]str
 
 func (r *PostgresRepo) SaveRefreshToken(ctx context.Context, token string, userID string, expiresAt time.Time) error {
 	_, err := r.db.Exec(ctx, `
-        INSERT INTO auth.refresh_tokens (token, user_id, expires_at)
+        INSERT INTO "auth".refresh_tokens (token, user_id, expires_at)
         VALUES ($1,$2,$3)
     `, token, userID, expiresAt)
 	if err != nil {
@@ -106,7 +106,7 @@ func (r *PostgresRepo) SaveRefreshToken(ctx context.Context, token string, userI
 
 func (r *PostgresRepo) ValidateRefreshToken(ctx context.Context, token string) (string, error) {
 	row := r.db.QueryRow(ctx, `
-        SELECT user_id, expires_at FROM auth.refresh_tokens WHERE token=$1
+        SELECT user_id, expires_at FROM "auth".refresh_tokens WHERE token=$1
     `, token)
 
 	var userID string
@@ -124,7 +124,7 @@ func (r *PostgresRepo) ValidateRefreshToken(ctx context.Context, token string) (
 }
 
 func (r *PostgresRepo) DeleteRefreshToken(ctx context.Context, token string) error {
-	_, err := r.db.Exec(ctx, `DELETE FROM auth.refresh_tokens WHERE token=$1`, token)
+	_, err := r.db.Exec(ctx, `DELETE FROM "auth".refresh_tokens WHERE token=$1`, token)
 	if err != nil {
 		return fmt.Errorf("repo.DeleteRefreshToken: %w", err)
 	}

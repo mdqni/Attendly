@@ -19,33 +19,20 @@ func NewUserService(repo repository.UserRepository, cfg *config.Config, group *c
 }
 
 func (s *userService) GetUserById(ctx context.Context, id string) (*userv1.User, error) {
-	byID, err := s.repo.GetUserById(ctx, id)
+	byID, err := s.repo.GetUserByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	return &userv1.User{
-		Id:      byID.ID,
+		Id:      byID.Id,
 		Name:    byID.Name,
 		Barcode: byID.Barcode,
 		Role:    byID.Role,
 	}, nil
 }
 
-func (s *userService) GetUserByBarcode(ctx context.Context, barcode string) (*userv1.User, error) {
-	byBarcode, err := s.repo.GetUserByBarcode(ctx, barcode)
-	if err != nil {
-		return nil, err
-	}
-	return &userv1.User{
-		Id:      byBarcode.ID,
-		Name:    byBarcode.Name,
-		Barcode: byBarcode.Barcode,
-		Role:    byBarcode.Role,
-	}, nil
-}
-
-func (s *userService) GetAllUsers(ctx context.Context) ([]*userv1.User, error) {
-	return s.repo.GetAllUsers(ctx)
+func (s *userService) GetAllUsers(ctx context.Context, page int, limit int) ([]*userv1.User, error) {
+	return s.repo.GetAllUsers(ctx, page, limit)
 }
 
 func (s *userService) IsInGroup(ctx context.Context, userID, groupID string) (bool, error) {

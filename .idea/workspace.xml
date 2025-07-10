@@ -4,40 +4,26 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="83616197-4eab-4f5b-aa1e-bafa5b96ce53" name="Changes" comment="fix(docker): correct service Dockerfile and docker-compose">
-      <change afterPath="$PROJECT_DIR$/proto/auth/v1/auth.proto" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/auth/Dockerfile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/auth/cmd/main.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/auth/internal/app/app.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/auth/internal/app/runner.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/auth/internal/client/group_client.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/auth/internal/config/config.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/auth/internal/delivery/grpc/server.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/auth/internal/domain/model/UserWithPassword.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/auth/internal/migrations/000001_init.down.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/auth/internal/migrations/000001_init.up.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/auth/internal/repository/postgres/repo.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/auth/internal/repository/repository.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/auth/internal/service/auth.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/auth/internal/service/service.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/user/internal/delivery/grpc/server1.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/user/internal/service/д" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/shared/token/refresh.go" afterDir="false" />
+    <list default="true" id="83616197-4eab-4f5b-aa1e-bafa5b96ce53" name="Changes" comment="auth service">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/proto/gen/go/user/v1/user.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/proto/gen/go/user/v1/user.pb.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/proto/gen/go/user/v1/user.pb.gw.go" beforeDir="false" afterPath="$PROJECT_DIR$/proto/gen/go/user/v1/user.pb.gw.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/proto/gen/go/user/v1/user_grpc.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/proto/gen/go/user/v1/user_grpc.pb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proto/gen/openapiv2/auth/v1/auth.swagger.json" beforeDir="false" afterPath="$PROJECT_DIR$/proto/gen/openapiv2/auth/v1/auth.swagger.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/proto/gen/openapiv2/group/v1/group.swagger.json" beforeDir="false" afterPath="$PROJECT_DIR$/proto/gen/openapiv2/group/v1/group.swagger.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/proto/gen/openapiv2/user/v1/user.swagger.json" beforeDir="false" afterPath="$PROJECT_DIR$/proto/gen/openapiv2/user/v1/user.swagger.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/proto/user/v1/user.proto" beforeDir="false" afterPath="$PROJECT_DIR$/proto/user/v1/user.proto" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/group/internal/migrations/000001_init.up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/services/group/internal/migrations/000001_init.up.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user/internal/app/app.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/internal/app/app.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/auth/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/services/auth/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/auth/internal/repository/postgres/repo.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/auth/internal/repository/postgres/repo.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/group/internal/repository/postgres/repo.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/group/internal/repository/postgres/repo.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/user/internal/delivery/grpc/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/internal/delivery/grpc/server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user/internal/migrations/000001_init.up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/internal/migrations/000001_init.up.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user/internal/delivery/grpc/server1.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/services/user/internal/repository/postgres/repo.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/internal/repository/postgres/repo.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/user/internal/repository/repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/internal/repository/repository.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/user/internal/service/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/internal/service/service.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/user/internal/service/user.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/internal/service/user.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shared/errs/errors.go" beforeDir="false" afterPath="$PROJECT_DIR$/shared/errs/errors.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user/internal/service/д" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -150,11 +136,11 @@
       <recent name="C:\Users\root\GolandProjects\Attendly\services\group\internal" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\root\GolandProjects\Attendly\shared\interceptor" />
       <recent name="C:\Users\root\GolandProjects\Attendly\services\auth" />
       <recent name="C:\Users\root\GolandProjects\Attendly\services\user\internal\service" />
       <recent name="C:\Users\root\GolandProjects\Attendly\services\user\internal\app" />
       <recent name="C:\Users\root\GolandProjects\Attendly\shared" />
-      <recent name="C:\Users\root\GolandProjects\Attendly\services\group\internal" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -332,7 +318,8 @@
     <MESSAGE value="migration + CI/CD with docker" />
     <MESSAGE value="feat(user): fix migrations" />
     <MESSAGE value="fix(docker): correct service Dockerfile and docker-compose" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix(docker): correct service Dockerfile and docker-compose" />
+    <MESSAGE value="auth service" />
+    <option name="LAST_COMMIT_MESSAGE" value="auth service" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

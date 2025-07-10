@@ -31,3 +31,20 @@ func (h *userServer) GetUser(ctx context.Context, req *userv1.GetUserRequest) (*
 	}
 	return &userv1.GetUserResponse{User: user}, nil
 }
+func (h *userServer) GetAllUsers(ctx context.Context, req *userv1.GetUsersRequest) (userv1.GetUsersResponse, error) {
+	user, err := h.service.GetAllUsers(ctx, int(req.GetPage()), int(req.GetLimit()))
+	if err != nil {
+		log.Println(err)
+		return userv1.GetUsersResponse{
+			Users: nil,
+		}, status.Error(codes.NotFound, "Users not found")
+	}
+	return userv1.GetUsersResponse{Users: user}, nil
+}
+
+func (h *userServer) DeleteUser(ctx context.Context, req *userv1.DeleteUserRequest) (*userv1.DeleteUserResponse, error) {
+	if strings.TrimSpace(req.GetId()) == "" {
+		return nil, status.Error(codes.InvalidArgument, "no user ID")
+	}
+	return &userv1.DeleteUserResponse{Success: true}, nil
+}

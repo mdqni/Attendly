@@ -3,22 +3,15 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
+
 	"github.com/jackc/pgx/v5/pgxpool"
-	errs "github.com/mdqni/Attendly/shared/errs"
+	userv1 "github.com/mdqni/Attendly/proto/gen/go/user/v1"
+	errPkg "github.com/mdqni/Attendly/shared/errs"
 )
 
 type PostgresRepo struct {
 	db *pgxpool.Pool
-}
-
-type InternalUser struct {
-	ID       string
-	Name     string
-	Barcode  string
-	Password string
-	Role     string
 }
 
 func New(connString string) (*PostgresRepo, error) {
@@ -31,72 +24,114 @@ func New(connString string) (*PostgresRepo, error) {
 	return &PostgresRepo{db: pool}, nil
 }
 
-func (r *PostgresRepo) GetUserById(ctx context.Context, id string) (*InternalUser, error) {
+func (r *PostgresRepo) GetUserByID(ctx context.Context, id string) (*userv1.User, error) {
 	query := `
-		SELECT u.id, u.name, u.barcode, u.password, r.name
-		FROM users u
-		JOIN roles r ON u.role_id = r.id
-		WHERE u.id = $1
+	SELECT id, name, barcode, role, email, avatar_url
+	FROM user.user_profiles
+	WHERE id = $1
 	`
-
 	row := r.db.QueryRow(ctx, query, id)
-	var user InternalUser
-	err := row.Scan(&user.ID, &user.Name, &user.Barcode, &user.Password, &user.Role)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, errs.ErrUserNotFound
-	}
+	var u userv1.User
+	err := row.Scan(&u.Id, &u.Name, &u.Barcode, &u.Role, &u.Email, &u.AvatarUrl)
 	if err != nil {
-		return nil, fmt.Errorf("GetUserById error: %w", err)
+		if err == sql.ErrNoRows {
+			return nil, errPkg.ErrUserNotFound
+		}
+		return nil, fmt.Errorf("repo.GetUserByID: %w", err)
 	}
-
-	return &user, nil
+	return &u, nil
 }
 
-func (r *PostgresRepo) GetUserByBarcode(ctx context.Context, barcode string) (*InternalUser, error) {
-	query := `
-		SELECT u.id, u.name, u.barcode, u.password, r.name
-		FROM users u
-		JOIN roles r ON u.role_id = r.id
-		WHERE u.barcode = $1
-	`
-
-	row := r.db.QueryRow(ctx, query, barcode)
-	var user InternalUser
-	err := row.Scan(&user.ID, &user.Name, &user.Barcode, &user.Password, &user.Role)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, errs.ErrUserNotFound
+func (r *PostgresRepo) GetUsers(ctx context.Context, page, limit int32) ([]*userv1.User, error) {
+	if page < 1 {
+		page = 1
 	}
-	if err != nil {
-		return nil, fmt.Errorf("GetUserByBarcode error: %w", err)
-	}
-
-	return &user, nil
-}
-
-func (r *PostgresRepo) GetAllUsers(ctx context.Context) ([]*InternalUser, error) {
+	offset := (page - 1) * limit
 	query := `
-		SELECT u.id, u.name, u.barcode, u.password, r.name
-		FROM users u
-		JOIN roles r ON u.role_id = r.id
+	SELECT id, name, barcode, role, email, avatar_url
+	FROM user.user_profiles
+	ORDER BY name
+	OFFSET $1 LIMIT $2
 	`
-
-	rows, err := r.db.Query(ctx, query)
+	rows, err := r.db.Query(ctx, query, offset, limit)
 	if err != nil {
-		return nil, fmt.Errorf("GetAllUsers query error: %w", err)
+		return nil, fmt.Errorf("repo.GetUsers: %w", err)
 	}
 	defer rows.Close()
 
-	var users []*InternalUser
+	var users []*userv1.User
 	for rows.Next() {
-		var user InternalUser
-		if err := rows.Scan(&user.ID, &user.Name, &user.Barcode, &user.Password, &user.Role); err != nil {
-			return nil, fmt.Errorf("scan error: %w", err)
+		var u userv1.User
+		if err := rows.Scan(&u.Id, &u.Name, &u.Barcode, &u.Role, &u.Email, &u.AvatarUrl); err != nil {
+			return nil, fmt.Errorf("repo.GetUsers scan: %w", err)
 		}
-		users = append(users, &user)
+		users = append(users, &u)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("repo.GetUsers rows: %w", err)
+	}
+	return users, nil
+}
+func (r *PostgresRepo) GetAllUsers(ctx context.Context, page int, limit int) ([]*userv1.User, error) {
+	if page < 1 {
+		page = 1
+	}
+	offset := (page - 1) * limit
+	query := `
+	SELECT id, name, barcode, role, email, avatar_url
+	FROM "user".user_profiles
+	ORDER BY name
+	OFFSET $1 LIMIT $2
+	`
+	rows, err := r.db.Query(ctx, query, offset, limit)
+	if err != nil {
+		return nil, fmt.Errorf("repo.GetUsers: %w", err)
+	}
+	defer rows.Close()
+
+	var users []*userv1.User
+	for rows.Next() {
+		var u userv1.User
+		if err := rows.Scan(&u.Id, &u.Name, &u.Barcode, &u.Role, &u.Email, &u.AvatarUrl); err != nil {
+			return nil, fmt.Errorf("repo.GetUsers scan: %w", err)
+		}
+		users = append(users, &u)
+	}
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("repo.GetUsers rows: %w", rows.Err())
 	}
 	return users, nil
 }
 
+func (r *PostgresRepo) UpdateUser(ctx context.Context, u *userv1.User) (*userv1.User, error) {
+	query := `
+	UPDATE user.user_profiles
+	SET name = $2, email = $3, avatar_url = $4
+	WHERE id = $1
+	RETURNING id, name, barcode, role, email, avatar_url
+	`
+	row := r.db.QueryRow(ctx, query, u.Id, u.Name, u.Email, u.AvatarUrl)
+	var updated userv1.User
+	if err := row.Scan(&updated.Id, &updated.Name, &updated.Barcode, &updated.Role, &updated.Email, &updated.AvatarUrl); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errPkg.ErrUserNotFound
+		}
+		return nil, fmt.Errorf("repo.UpdateUser: %w", err)
+	}
+	return &updated, nil
+}
+
+func (r *PostgresRepo) DeleteUser(ctx context.Context, id string) error {
+	cmd, err := r.db.Exec(ctx, `DELETE FROM user.user_profiles WHERE id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("repo.DeleteUser: %w", err)
+	}
+	if cmd.RowsAffected() == 0 {
+		return errPkg.ErrUserNotFound
+	}
+	return nil
+}
+
 func (r *PostgresRepo) IsUserInGroup(ctx context.Context, userID, groupID string) (bool, error) {
-	return true, nil
+	panic("implement me")
 }

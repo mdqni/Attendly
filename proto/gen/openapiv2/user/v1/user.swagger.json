@@ -18,6 +18,7 @@
   "paths": {
     "/v1/users": {
       "get": {
+        "summary": "Получить список пользователей (без пароля)",
         "operationId": "UserService_GetUsers",
         "responses": {
           "200": {
@@ -33,6 +34,22 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
         "tags": [
           "UserService"
         ]
@@ -40,6 +57,7 @@
     },
     "/v1/users/{id}": {
       "get": {
+        "summary": "Получить профиль пользователя по ID",
         "operationId": "UserService_GetUser",
         "responses": {
           "200": {
@@ -66,10 +84,96 @@
         "tags": [
           "UserService"
         ]
+      },
+      "delete": {
+        "summary": "Удалить пользователя",
+        "operationId": "UserService_DeleteUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
       }
     },
-    "/v1/users/{userId}/groups/{groupId}/check": {
+    "/v1/users/{user.id}": {
+      "patch": {
+        "summary": "Обновить данные профиля пользователя",
+        "operationId": "UserService_UpdateUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "user.id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "user",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "barcode": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "avatarUrl": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/v1/users/{userId}/groups/{groupId}/member": {
       "get": {
+        "summary": "Проверить, состоит ли пользователь в группе",
         "operationId": "UserService_IsInGroup",
         "responses": {
           "200": {
@@ -134,6 +238,14 @@
         }
       }
     },
+    "v1DeleteUserResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
     "v1GetUserResponse": {
       "type": "object",
       "properties": {
@@ -162,6 +274,14 @@
         }
       }
     },
+    "v1UpdateUserResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "$ref": "#/definitions/v1User"
+        }
+      }
+    },
     "v1User": {
       "type": "object",
       "properties": {
@@ -175,8 +295,13 @@
           "type": "string"
         },
         "role": {
-          "type": "string",
-          "title": "\"student\", \"teacher\", \"admin\""
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "avatarUrl": {
+          "type": "string"
         }
       }
     }

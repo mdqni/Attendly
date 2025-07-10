@@ -26,6 +26,24 @@ services:
     ports:
       - "6379:6379"
 
+  auth:
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "grpc_health_probe", "-addr=localhost:50050" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    ports:
+      - "50050:50050"
+    environment:
+      - CONN_STRING=postgresql://postgres:postgres@postgres:5432/attendly?sslmode=disable
+      - REDIS_ADDR=redis:6379
+      - JWT_SECRET=SUPER-SECRET-CODE
   user:
     build:
       context: .

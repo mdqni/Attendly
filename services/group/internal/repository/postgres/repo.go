@@ -27,52 +27,6 @@ func New(connString string) (*PostgresRepo, error) {
 		return nil, fmt.Errorf("%s: failed to connect to database: %w", op, err)
 	}
 
-	_, err = pool.Exec(ctx, `SET search_path TO "group"`)
-	if err != nil {
-		log.Println(err)
-		return nil, fmt.Errorf("%s: failed to set search_path to \"group\": %w", op, err)
-	}
-
-	_, err = pool.Exec(ctx, `CREATE EXTENSION IF NOT EXISTS "pgcrypto";`)
-	if err != nil {
-		log.Println(err)
-		return nil, fmt.Errorf("%s: failed to create pgcrypto extension: %w", op, err)
-	}
-
-	_, err = pool.Exec(ctx, `SET search_path TO "group"`)
-	if err != nil {
-		log.Println(err)
-		return nil, fmt.Errorf("%s: failed to set search_path to group: %w", op, err)
-	}
-
-	// Создаем таблицы
-	statements := []string{
-		`CREATE SCHEMA IF NOT EXISTS "group";`,
-		`SET search_path TO "group";`,
-
-		`CREATE TABLE IF NOT EXISTS groups (
-			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			name TEXT UNIQUE NOT NULL,
-			department TEXT,
-			year INTEGER,
-			created_at timestamptz DEFAULT now()
-		);`,
-
-		`CREATE TABLE IF NOT EXISTS user_groups (
-			user_id UUID NOT NULL,
-			group_id UUID NOT NULL,
-			PRIMARY KEY (user_id, group_id),
-			FOREIGN KEY (user_id) REFERENCES "user".users(id) ON DELETE CASCADE,
-			FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
-		);`,
-	}
-
-	for _, stmt := range statements {
-		if _, err := pool.Exec(ctx, stmt); err != nil {
-			return nil, fmt.Errorf("%s: failed to execute statement: %w\nSQL: %s", op, err, stmt)
-		}
-	}
-
 	return &PostgresRepo{db: pool}, nil
 }
 
@@ -156,7 +110,7 @@ func (r *PostgresRepo) GetGroup(ctx context.Context, groupID string) (*group1.Gr
 
 func (r *PostgresRepo) ListUsersInGroup(ctx context.Context, groupID string) ([]*userv1.User, error) {
 	const query = `
-		SELECT u.id, u.name, u.barcode, u.password, r.name
+		SELECT u.id, u.name, u.barcode, r.name
 		FROM user_groups ug
 		JOIN "user".users u ON u.id = ug.user_id
 		JOIN "user".roles r ON r.id = u.role_id
@@ -173,7 +127,7 @@ func (r *PostgresRepo) ListUsersInGroup(ctx context.Context, groupID string) ([]
 
 	for rows.Next() {
 		var user userv1.User
-		err := rows.Scan(&user.Id, &user.Name, &user.Barcode, &user.Password, &user.Role)
+		err := rows.Scan(&user.Id, &user.Name, &user.Barcode, &user.Role)
 		if err != nil {
 			return nil, fmt.Errorf("row scan error: %w", err)
 		}

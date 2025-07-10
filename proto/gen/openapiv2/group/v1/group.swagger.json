@@ -354,8 +354,13 @@
           "type": "string"
         },
         "role": {
-          "type": "string",
-          "title": "\"student\", \"teacher\", \"admin\""
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "avatarUrl": {
+          "type": "string"
         }
       }
     }
