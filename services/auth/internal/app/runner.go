@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"log"
 	"time"
 
@@ -25,9 +26,14 @@ func RunMigrations(connString string, migrationsPath string) {
 		log.Fatalf("failed to create migrate instance: %v", err)
 	}
 
-	defer m.Close()
+	defer func(m *migrate.Migrate) {
+		err, _ := m.Close()
+		if err != nil {
+			log.Fatalf("failed to close migrations: %v", err)
+		}
+	}(m)
 
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		log.Fatalf("failed to run migrations: %v", err)
 	}
 

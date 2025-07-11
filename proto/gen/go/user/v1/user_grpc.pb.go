@@ -30,15 +30,10 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
-	// Получить профиль пользователя по ID
 	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
-	// Получить список пользователей (без пароля)
 	GetUsers(ctx context.Context, in *GetUsersRequest, opts ...grpc.CallOption) (*GetUsersResponse, error)
-	// Обновить данные профиля пользователя
 	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error)
-	// Удалить пользователя
 	DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error)
-	// Проверить, состоит ли пользователь в группе
 	IsInGroup(ctx context.Context, in *IsInGroupRequest, opts ...grpc.CallOption) (*IsInGroupResponse, error)
 }
 
@@ -104,15 +99,10 @@ func (c *userServiceClient) IsInGroup(ctx context.Context, in *IsInGroupRequest,
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
 type UserServiceServer interface {
-	// Получить профиль пользователя по ID
 	GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
-	// Получить список пользователей (без пароля)
 	GetUsers(context.Context, *GetUsersRequest) (*GetUsersResponse, error)
-	// Обновить данные профиля пользователя
 	UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
-	// Удалить пользователя
 	DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
-	// Проверить, состоит ли пользователь в группе
 	IsInGroup(context.Context, *IsInGroupRequest) (*IsInGroupResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }

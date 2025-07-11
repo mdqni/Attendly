@@ -350,12 +350,6 @@
         "name": {
           "type": "string"
         },
-        "barcode": {
-          "type": "string"
-        },
-        "role": {
-          "type": "string"
-        },
         "email": {
           "type": "string"
         },

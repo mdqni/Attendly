@@ -51,6 +51,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      auth:
+        condition: service_started
     healthcheck:
       test: [ "CMD", "grpc_health_probe", "-addr=localhost:50051" ]
       interval: 5s
@@ -71,6 +73,8 @@ services:
       postgres:
         condition: service_healthy
       user:
+        condition: service_started
+      auth:
         condition: service_started
     ports:
       - "50052:50052"

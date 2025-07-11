@@ -26,13 +26,13 @@ func New(connString string) (*PostgresRepo, error) {
 
 func (r *PostgresRepo) GetUserByID(ctx context.Context, id string) (*userv1.User, error) {
 	query := `
-	SELECT id, name, barcode, role, email, avatar_url
+	SELECT id, name, email, avatar_url
 	FROM user.user_profiles
 	WHERE id = $1
 	`
 	row := r.db.QueryRow(ctx, query, id)
 	var u userv1.User
-	err := row.Scan(&u.Id, &u.Name, &u.Barcode, &u.Role, &u.Email, &u.AvatarUrl)
+	err := row.Scan(&u.Id, &u.Name, &u.Email, &u.AvatarUrl)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errPkg.ErrUserNotFound
@@ -48,7 +48,7 @@ func (r *PostgresRepo) GetUsers(ctx context.Context, page, limit int32) ([]*user
 	}
 	offset := (page - 1) * limit
 	query := `
-	SELECT id, name, barcode, role, email, avatar_url
+	SELECT id, name, email, avatar_url
 	FROM user.user_profiles
 	ORDER BY name
 	OFFSET $1 LIMIT $2
@@ -62,7 +62,7 @@ func (r *PostgresRepo) GetUsers(ctx context.Context, page, limit int32) ([]*user
 	var users []*userv1.User
 	for rows.Next() {
 		var u userv1.User
-		if err := rows.Scan(&u.Id, &u.Name, &u.Barcode, &u.Role, &u.Email, &u.AvatarUrl); err != nil {
+		if err := rows.Scan(&u.Id, &u.Name, &u.Email, &u.AvatarUrl); err != nil {
 			return nil, fmt.Errorf("repo.GetUsers scan: %w", err)
 		}
 		users = append(users, &u)
@@ -78,7 +78,7 @@ func (r *PostgresRepo) GetAllUsers(ctx context.Context, page int, limit int) ([]
 	}
 	offset := (page - 1) * limit
 	query := `
-	SELECT id, name, barcode, role, email, avatar_url
+	SELECT id, name, email, avatar_url
 	FROM "user".user_profiles
 	ORDER BY name
 	OFFSET $1 LIMIT $2
@@ -92,7 +92,7 @@ func (r *PostgresRepo) GetAllUsers(ctx context.Context, page int, limit int) ([]
 	var users []*userv1.User
 	for rows.Next() {
 		var u userv1.User
-		if err := rows.Scan(&u.Id, &u.Name, &u.Barcode, &u.Role, &u.Email, &u.AvatarUrl); err != nil {
+		if err := rows.Scan(&u.Id, &u.Name, &u.Email, &u.AvatarUrl); err != nil {
 			return nil, fmt.Errorf("repo.GetUsers scan: %w", err)
 		}
 		users = append(users, &u)
@@ -108,11 +108,11 @@ func (r *PostgresRepo) UpdateUser(ctx context.Context, u *userv1.User) (*userv1.
 	UPDATE user.user_profiles
 	SET name = $2, email = $3, avatar_url = $4
 	WHERE id = $1
-	RETURNING id, name, barcode, role, email, avatar_url
+	RETURNING id, name, email, avatar_url
 	`
 	row := r.db.QueryRow(ctx, query, u.Id, u.Name, u.Email, u.AvatarUrl)
 	var updated userv1.User
-	if err := row.Scan(&updated.Id, &updated.Name, &updated.Barcode, &updated.Role, &updated.Email, &updated.AvatarUrl); err != nil {
+	if err := row.Scan(&updated.Id, &updated.Name, &updated.Email, &updated.AvatarUrl); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errPkg.ErrUserNotFound
 		}
