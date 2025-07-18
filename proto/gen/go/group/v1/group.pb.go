@@ -7,6 +7,7 @@
 package groupv1
 
 import (
+	_ "github.com/mdqni/Attendly/proto/gen/go/auth/v1"
 	_ "github.com/mdqni/Attendly/proto/gen/go/qr/v1"
 	v1 "github.com/mdqni/Attendly/proto/gen/go/user/v1"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
@@ -664,7 +665,7 @@ var File_group_v1_group_proto protoreflect.FileDescriptor
 
 const file_group_v1_group_proto_rawDesc = "" +
 	"\n" +
-	"\x14group/v1/group.proto\x12\bgroup.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x15google/api/http.proto\x1a\x12user/v1/user.proto\x1a\x0eqr/v1/qr.proto\"_\n" +
+	"\x14group/v1/group.proto\x12\bgroup.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x15google/api/http.proto\x1a\x12user/v1/user.proto\x1a\x0eqr/v1/qr.proto\x1a\x12auth/v1/auth.proto\"_\n" +
 	"\x05Group\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1e\n" +

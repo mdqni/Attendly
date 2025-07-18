@@ -29,6 +29,7 @@ type RegisterRequest struct {
 	Barcode       string                 `protobuf:"bytes,2,opt,name=barcode,proto3" json:"barcode,omitempty"`
 	Password      string                 `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
 	Role          string                 `protobuf:"bytes,4,opt,name=role,proto3" json:"role,omitempty"` // student, teacher, admin
+	Email         string                 `protobuf:"bytes,5,opt,name=email,proto3" json:"email,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -87,6 +88,13 @@ func (x *RegisterRequest) GetPassword() string {
 func (x *RegisterRequest) GetRole() string {
 	if x != nil {
 		return x.Role
+	}
+	return ""
+}
+
+func (x *RegisterRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
 	}
 	return ""
 }
@@ -311,12 +319,13 @@ var File_auth_v1_auth_proto protoreflect.FileDescriptor
 
 const file_auth_v1_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x12auth/v1/auth.proto\x12\aauth.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x12user/v1/user.proto\"o\n" +
+	"\x12auth/v1/auth.proto\x12\aauth.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x12user/v1/user.proto\"\x85\x01\n" +
 	"\x0fRegisterRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
 	"\abarcode\x18\x02 \x01(\tR\abarcode\x12\x1a\n" +
 	"\bpassword\x18\x03 \x01(\tR\bpassword\x12\x12\n" +
-	"\x04role\x18\x04 \x01(\tR\x04role\"D\n" +
+	"\x04role\x18\x04 \x01(\tR\x04role\x12\x14\n" +
+	"\x05email\x18\x05 \x01(\tR\x05email\"D\n" +
 	"\fLoginRequest\x12\x18\n" +
 	"\abarcode\x18\x01 \x01(\tR\abarcode\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"y\n" +

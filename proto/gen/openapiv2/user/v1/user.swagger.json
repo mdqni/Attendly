@@ -146,6 +146,12 @@
                 "name": {
                   "type": "string"
                 },
+                "barcode": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string"
+                },
                 "email": {
                   "type": "string"
                 },
@@ -278,6 +284,12 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "barcode": {
+          "type": "string"
+        },
+        "role": {
           "type": "string"
         },
         "email": {

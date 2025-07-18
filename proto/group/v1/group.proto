@@ -5,6 +5,8 @@ import "google/api/annotations.proto";
 import "google/api/http.proto";
 import "user/v1/user.proto";
 import "qr/v1/qr.proto";
+import "auth/v1/auth.proto";
+
 option go_package = "github.com/mdqni/Attendly/proto/gen/go/group/v1;groupv1";
 
 

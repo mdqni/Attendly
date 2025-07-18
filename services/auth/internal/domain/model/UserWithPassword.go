@@ -6,4 +6,5 @@ type UserWithPassword struct {
 	Barcode  string
 	Password string
 	Role     string
+	Email    string
 }

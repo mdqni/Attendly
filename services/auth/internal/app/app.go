@@ -4,6 +4,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/mdqni/Attendly/services/auth/internal/config"
 	"github.com/mdqni/Attendly/services/auth/internal/delivery/grpc"
+	kafka2 "github.com/mdqni/Attendly/services/auth/internal/kafka"
 	"github.com/mdqni/Attendly/services/auth/internal/repository/postgres"
 	"github.com/mdqni/Attendly/services/auth/internal/service"
 	"github.com/mdqni/Attendly/shared/interceptor"
@@ -24,7 +25,7 @@ type App struct {
 	healthServer *health.Server
 }
 
-func NewApp(cfg *config.Config, log *slog.Logger, limiter *redisUtils.Limiter) *App {
+func NewApp(cfg *config.Config, log *slog.Logger, limiter *redisUtils.Limiter, producer *kafka2.EventProducer) *App {
 	const op = "app.NewApp"
 
 	recoveryOpts := []recovery.Option{
@@ -41,7 +42,7 @@ func NewApp(cfg *config.Config, log *slog.Logger, limiter *redisUtils.Limiter) *
 		panic(err)
 	}
 
-	svc := service.NewAuthService(repo, limiter, cfg)
+	svc := service.NewAuthService(repo, limiter, cfg, producer)
 
 	server := g.NewServer(g.ChainUnaryInterceptor(
 		recovery.UnaryServerInterceptor(recoveryOpts...),

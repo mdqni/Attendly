@@ -30,6 +30,7 @@ message RegisterRequest {
   string barcode = 2;
   string password = 3;
   string role = 4; // student, teacher, admin
+  string email = 5;
 }
 
 message LoginRequest {

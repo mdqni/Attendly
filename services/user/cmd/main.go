@@ -22,8 +22,6 @@ const (
 func main() {
 	cfg := config.MustLoad()
 
-	app2.RunMigrations(cfg.ConnString, "/app/internal/migrations")
-
 	log := setupLogger(cfg.Env)
 
 	rdb := redisUtils.NewRedisClient(cfg.Redis.Addr)
@@ -46,6 +44,7 @@ func main() {
 	go func() {
 		app.Run()
 	}()
+
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 	<-stop

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/mdqni/Attendly/services/auth/internal/app"
 	"github.com/mdqni/Attendly/services/auth/internal/config"
+	"github.com/mdqni/Attendly/services/auth/internal/kafka"
 	"github.com/mdqni/Attendly/shared/redisUtils"
 	"log/slog"
 	"os"
@@ -20,8 +21,6 @@ const (
 
 func main() {
 	cfg := config.MustLoad()
-
-	app.RunMigrations(cfg.ConnString, "/app/internal/migrations")
 
 	log := setupLogger(cfg.Env)
 
@@ -39,7 +38,14 @@ func main() {
 	if err != nil {
 		log.Error("Group client failed: %v", err)
 	}
-	app := app.NewApp(cfg, log, limiter)
+
+	prod, err := kafka.NewEventProducer(os.Getenv("KAFKA_BROKERS"))
+	if err != nil {
+		log.Error("kafka producer init error: %v", err)
+	}
+	defer prod.Close()
+
+	app := app.NewApp(cfg, log, limiter, prod)
 	go func() {
 		app.Run()
 	}()

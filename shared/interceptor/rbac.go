@@ -12,8 +12,8 @@ import (
 )
 
 var openMethods = map[string]struct{}{
-	"/user.v1.UserService/Login":    {},
-	"/user.v1.UserService/Register": {},
+	"/auth.v1.AuthService/Login":    {},
+	"/auth.v1.AuthService/Register": {},
 }
 
 const userIDKey = "user_id_key"
@@ -25,6 +25,7 @@ func RBACInterceptor(secret string) grpc.UnaryServerInterceptor {
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
+		log.Println(info.FullMethod)
 		_, err := handler(ctx, req)
 		if _, ok := openMethods[info.FullMethod]; ok {
 			return handler(ctx, req)

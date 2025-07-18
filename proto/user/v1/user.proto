@@ -42,6 +42,8 @@ service UserService {
 message User {
   string id = 1;
   string name = 2;
+  string barcode = 3;
+  string role = 4;
   string email = 5;
   string avatar_url = 6;
 }

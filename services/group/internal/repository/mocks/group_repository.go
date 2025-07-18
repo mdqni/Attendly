@@ -104,6 +104,34 @@ func (_m *GroupRepository) GetGroup(ctx context.Context, groupID string) (*group
 	return r0, r1
 }
 
+// IsInGroup provides a mock function with given fields: ctx, groupID, userId
+func (_m *GroupRepository) IsInGroup(ctx context.Context, groupID string, userId string) (bool, error) {
+	ret := _m.Called(ctx, groupID, userId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsInGroup")
+	}
+
+	var r0 bool
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (bool, error)); ok {
+		return rf(ctx, groupID, userId)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) bool); ok {
+		r0 = rf(ctx, groupID, userId)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, groupID, userId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListUsersInGroup provides a mock function with given fields: ctx, groupID
 func (_m *GroupRepository) ListUsersInGroup(ctx context.Context, groupID string) ([]*userv1.User, error) {
 	ret := _m.Called(ctx, groupID)

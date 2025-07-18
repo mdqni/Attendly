@@ -7,5 +7,6 @@ CREATE TABLE IF NOT EXISTS user_profiles
     name       TEXT NOT NULL,
     email      TEXT,
     avatar_url TEXT,
-    created_at TIMESTAMP DEFAULT now()
+    created_at TIMESTAMP DEFAULT now(),
+    FOREIGN KEY (id) REFERENCES "auth".users (id) ON DELETE CASCADE
 );

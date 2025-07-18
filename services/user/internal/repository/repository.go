@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	userv1 "github.com/mdqni/Attendly/proto/gen/go/user/v1"
+	"github.com/mdqni/Attendly/shared/domain"
 )
 
 type UserRepository interface {
@@ -11,4 +12,5 @@ type UserRepository interface {
 	UpdateUser(ctx context.Context, u *userv1.User) (*userv1.User, error)
 	DeleteUser(ctx context.Context, id string) error
 	IsUserInGroup(ctx context.Context, userID string, groupID string) (bool, error)
+	CreateUser(ctx context.Context, u *domain.User) (*userv1.User, error)
 }

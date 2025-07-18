@@ -5,22 +5,25 @@ import (
 	"github.com/google/uuid"
 	"github.com/mdqni/Attendly/services/auth/internal/config"
 	"github.com/mdqni/Attendly/services/auth/internal/domain/model"
+	kafka2 "github.com/mdqni/Attendly/services/auth/internal/kafka"
 	"github.com/mdqni/Attendly/services/auth/internal/repository"
 	"github.com/mdqni/Attendly/shared/errs"
 	"github.com/mdqni/Attendly/shared/passwordUtils"
 	"github.com/mdqni/Attendly/shared/redisUtils"
 	"github.com/mdqni/Attendly/shared/token"
+	"log"
 	"time"
 )
 
 type authService struct {
-	repo    repository.AuthRepository
-	limiter redisUtils.LimiterInterface
-	cfg     *config.Config
+	repo          repository.AuthRepository
+	limiter       redisUtils.LimiterInterface
+	kafkaProducer *kafka2.EventProducer
+	cfg           *config.Config
 }
 
-func NewAuthService(repo repository.AuthRepository, limiter redisUtils.LimiterInterface, cfg *config.Config) AuthService {
-	return &authService{repo: repo, limiter: limiter, cfg: cfg}
+func NewAuthService(repo repository.AuthRepository, limiter redisUtils.LimiterInterface, cfg *config.Config, kafka *kafka2.EventProducer) AuthService {
+	return &authService{repo: repo, limiter: limiter, cfg: cfg, kafkaProducer: kafka}
 }
 
 func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthResult, error) {
@@ -45,6 +48,7 @@ func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthR
 		ID:       uuid.NewString(),
 		Name:     input.Name,
 		Barcode:  input.Barcode,
+		Email:    input.Email,
 		Password: hashed,
 		Role:     input.Role,
 	}
@@ -66,6 +70,11 @@ func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthR
 	refreshToken, err := token.GenerateRefreshToken()
 	if err != nil {
 		return nil, err
+	}
+
+	err = s.kafkaProducer.SendUserRegisteredEvent(ctx, user.ID, user.Email, user.Role)
+	if err != nil {
+		log.Printf("Failed to send Kafka kafka: %v", err)
 	}
 
 	return &AuthResult{

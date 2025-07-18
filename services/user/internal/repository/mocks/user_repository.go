@@ -15,12 +15,90 @@ type UserRepository struct {
 	mock.Mock
 }
 
-// CheckUserInGroup provides a mock function with given fields: ctx, userID, groupID
-func (_m *UserRepository) CheckUserInGroup(ctx context.Context, userID string, groupID string) (bool, error) {
+// DeleteUser provides a mock function with given fields: ctx, id
+func (_m *UserRepository) DeleteUser(ctx context.Context, id string) error {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteUser")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// GetAllUsers provides a mock function with given fields: ctx, page, limit
+func (_m *UserRepository) GetAllUsers(ctx context.Context, page int, limit int) ([]*userv1.User, error) {
+	ret := _m.Called(ctx, page, limit)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllUsers")
+	}
+
+	var r0 []*userv1.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) ([]*userv1.User, error)); ok {
+		return rf(ctx, page, limit)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) []*userv1.User); ok {
+		r0 = rf(ctx, page, limit)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*userv1.User)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, int) error); ok {
+		r1 = rf(ctx, page, limit)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetUserByID provides a mock function with given fields: ctx, id
+func (_m *UserRepository) GetUserByID(ctx context.Context, id string) (*userv1.User, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetUserByID")
+	}
+
+	var r0 *userv1.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*userv1.User, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *userv1.User); ok {
+		r0 = rf(ctx, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*userv1.User)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// IsUserInGroup provides a mock function with given fields: ctx, userID, groupID
+func (_m *UserRepository) IsUserInGroup(ctx context.Context, userID string, groupID string) (bool, error) {
 	ret := _m.Called(ctx, userID, groupID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for CheckUserInGroup")
+		panic("no return value specified for IsUserInGroup")
 	}
 
 	var r0 bool
@@ -43,140 +121,34 @@ func (_m *UserRepository) CheckUserInGroup(ctx context.Context, userID string, g
 	return r0, r1
 }
 
-// GetPermissions provides a mock function with given fields: ctx, userID
-func (_m *UserRepository) GetPermissions(ctx context.Context, userID string) ([]string, error) {
-	ret := _m.Called(ctx, userID)
+// UpdateUser provides a mock function with given fields: ctx, u
+func (_m *UserRepository) UpdateUser(ctx context.Context, u *userv1.User) (*userv1.User, error) {
+	ret := _m.Called(ctx, u)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetPermissions")
-	}
-
-	var r0 []string
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) ([]string, error)); ok {
-		return rf(ctx, userID)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) []string); ok {
-		r0 = rf(ctx, userID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]string)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, userID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetUserByBarcode provides a mock function with given fields: ctx, barcode
-func (_m *UserRepository) GetUserByBarcode(ctx context.Context, barcode string) (*userv1.User, error) {
-	ret := _m.Called(ctx, barcode)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetUserByBarcode")
+		panic("no return value specified for UpdateUser")
 	}
 
 	var r0 *userv1.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*userv1.User, error)); ok {
-		return rf(ctx, barcode)
+	if rf, ok := ret.Get(0).(func(context.Context, *userv1.User) (*userv1.User, error)); ok {
+		return rf(ctx, u)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *userv1.User); ok {
-		r0 = rf(ctx, barcode)
+	if rf, ok := ret.Get(0).(func(context.Context, *userv1.User) *userv1.User); ok {
+		r0 = rf(ctx, u)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*userv1.User)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, barcode)
+	if rf, ok := ret.Get(1).(func(context.Context, *userv1.User) error); ok {
+		r1 = rf(ctx, u)
 	} else {
 		r1 = ret.Error(1)
 	}
 
 	return r0, r1
-}
-
-// GetUserById provides a mock function with given fields: ctx, barcode
-func (_m *UserRepository) GetUserById(ctx context.Context, barcode string) (*userv1.User, error) {
-	ret := _m.Called(ctx, barcode)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetUserById")
-	}
-
-	var r0 *userv1.User
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*userv1.User, error)); ok {
-		return rf(ctx, barcode)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *userv1.User); ok {
-		r0 = rf(ctx, barcode)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*userv1.User)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, barcode)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// HasPermission provides a mock function with given fields: ctx, userID, action
-func (_m *UserRepository) HasPermission(ctx context.Context, userID string, action string) (bool, error) {
-	ret := _m.Called(ctx, userID, action)
-
-	if len(ret) == 0 {
-		panic("no return value specified for HasPermission")
-	}
-
-	var r0 bool
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) (bool, error)); ok {
-		return rf(ctx, userID, action)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) bool); ok {
-		r0 = rf(ctx, userID, action)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
-		r1 = rf(ctx, userID, action)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// SaveUser provides a mock function with given fields: ctx, user
-func (_m *UserRepository) SaveUser(ctx context.Context, user *userv1.User) error {
-	ret := _m.Called(ctx, user)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SaveUser")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *userv1.User) error); ok {
-		r0 = rf(ctx, user)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
 }
 
 // NewUserRepository creates a new instance of UserRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

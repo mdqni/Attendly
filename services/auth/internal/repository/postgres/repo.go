@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mdqni/Attendly/services/auth/internal/domain/model"
 	"github.com/mdqni/Attendly/shared/errs"
+	"log"
 	"time"
 )
 
@@ -29,13 +30,13 @@ func New(connString string) (*PostgresRepo, error) {
 func (r *PostgresRepo) SaveUser(ctx context.Context, user model.UserWithPassword) error {
 	const op = "repo.SaveUser"
 	var roleID int
-	err := r.db.QueryRow(ctx, `SELECT id FROM roles WHERE name = $1`, user.Role).Scan(&roleID)
+	err := r.db.QueryRow(ctx, `SELECT id FROM "auth".roles WHERE name = $1`, user.Role).Scan(&roleID)
 	if err != nil {
 		return fmt.Errorf("role not found: %w", err)
 	}
 
 	_, err = r.db.Exec(ctx, `
-		INSERT INTO users (id, name, barcode, password, role_id)
+		INSERT INTO "auth".users (id, name, barcode, password, role_id)
 		VALUES ($1, $2, $3, $4, $5)
 	`, user.ID, user.Name, user.Barcode, user.Password, roleID)
 
@@ -61,8 +62,10 @@ func (r *PostgresRepo) GetUserByBarcode(ctx context.Context, barcode string) (*m
 	var u model.UserWithPassword
 	if err := row.Scan(&u.ID, &u.Name, &u.Barcode, &u.Password, &u.Role); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("repo.GetUserByBarcode: ", err)
 			return nil, errs.ErrUserNotFound
 		}
+		log.Println(err)
 		return nil, fmt.Errorf("repo.GetUserByBarcode: %w", err)
 	}
 	return &u, nil

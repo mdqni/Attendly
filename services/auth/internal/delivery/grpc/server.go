@@ -53,6 +53,7 @@ func (h *authServer) Register(ctx context.Context, req *authv1.RegisterRequest) 
 		Name:     req.GetName(),
 		Barcode:  req.GetBarcode(),
 		Password: req.GetPassword(),
+		Email:    req.GetEmail(),
 		Role:     req.GetRole(),
 	})
 	if err != nil {

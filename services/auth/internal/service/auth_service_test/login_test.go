@@ -4,16 +4,14 @@ import (
 	"context"
 	"github.com/go-redis/redis_rate/v10"
 	userv1 "github.com/mdqni/Attendly/proto/gen/go/user/v1"
-	"github.com/mdqni/Attendly/services/user/internal/config"
-	"github.com/mdqni/Attendly/services/user/internal/repository/mocks"
-	"github.com/mdqni/Attendly/services/user/internal/service"
+	"github.com/mdqni/Attendly/services/auth/internal/config"
+	"github.com/mdqni/Attendly/services/auth/internal/repository/mocks"
+	"github.com/mdqni/Attendly/services/auth/internal/service"
 	errs "github.com/mdqni/Attendly/shared/errs"
-	"github.com/mdqni/Attendly/shared/passwordUtils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"log"
 	"testing"
 	"time"
 )
@@ -29,10 +27,10 @@ func (f *fakeLimiter) Reset(_ context.Context, _ string) error {
 	return nil
 }
 func TestLogin_Success(t *testing.T) {
-	mockRepo := mocks.NewUserRepository(t)
+	mockRepo := mocks.NewAuthRepository(t)
 	limiter := &fakeLimiter{}
 	cfg := config.MustLoad()
-	svc := service.NewUserService(mockRepo, cfg, nil)
+	svc := service.NewAuthService(mockRepo, limiter, cfg)
 
 	user := &userv1.User{
 		Id:      "u-1",
@@ -45,32 +43,35 @@ func TestLogin_Success(t *testing.T) {
 	mockRepo.On("GetUserByBarcode", mock.Anything, "123456").Return(user, nil)
 	mockRepo.On("GetPermissions", mock.Anything, "u-1").Return(perms, nil)
 
-	resp, err := svc.(context.Background(), "123456", "1234")
+	resp, err := svc.Login(context.Background(), service.LoginInput{
+		Barcode:  "123456",
+		Password: "1234",
+	})
 
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
-	assert.Equal(t, user.Id, resp.User.Id)
-	assert.NotEmpty(t, resp.Token)
+	assert.Equal(t, user.Id, resp.UserID)
+	assert.NotEmpty(t, resp.AccessToken)
 	mockRepo.AssertExpectations(t)
 }
 
 func TestLogin_InvalidPassword(t *testing.T) {
 
-	mockRepo := mocks.NewUserRepository(t)
+	mockRepo := mocks.NewAuthRepository(t)
 	limiter := &fakeLimiter{}
 	cfg := config.MustLoad()
-	svc := service.NewUserService(mockRepo, limiter, cfg, nil)
-	correctHashed, _ := passwordUtils.HashPassword("correct-password")
+	svc := service.NewAuthService(mockRepo, limiter, cfg)
 	user := &userv1.User{
-		Id:       "u-1",
-		Name:     "Test",
-		Barcode:  "123456",
-		Password: correctHashed,
-		Role:     "student",
+		Id:      "u-1",
+		Name:    "Test",
+		Barcode: "123456",
+		Role:    "student",
 	}
 	mockRepo.On("GetUserByBarcode", mock.Anything, "123456").Return(user, nil)
 
-	resp, err := svc.Login(context.Background(), "123456", "wrong-password")
+	resp, err := svc.Login(context.Background(), service.LoginInput{
+		Barcode: "123456", Password: "wrong-password",
+	})
 
 	assert.Nil(t, resp)
 	assert.Error(t, err)
@@ -81,13 +82,13 @@ func TestLogin_InvalidPassword(t *testing.T) {
 }
 
 func TestLogin_UserNotFound(t *testing.T) {
-	mockRepo := mocks.NewUserRepository(t)
+	mockRepo := mocks.NewAuthRepository(t)
 	limiter := &fakeLimiter{}
 	cfg := config.MustLoad()
-	svc := service.NewUserService(mockRepo, limiter, cfg, nil)
+	svc := service.NewAuthService(mockRepo, limiter, cfg)
 
 	mockRepo.On("GetUserByBarcode", mock.Anything, "123456").Return(nil, errs.ErrUserNotFound)
-	resp, err := svc.Login(context.Background(), "123456", "1234")
+	resp, err := svc.Login(context.Background(), service.LoginInput{Barcode: "123456", Password: "1234"})
 	assert.Nil(t, resp)
 	assert.Error(t, err)
 	st, ok := status.FromError(err)
@@ -113,23 +114,22 @@ func (l *limitedFakeLimiter) Reset(_ context.Context, _ string) error {
 }
 
 func TestLogin_ResourceExhausted(t *testing.T) {
-	mockRepo := mocks.NewUserRepository(t)
+	mockRepo := mocks.NewAuthRepository(t)
 	limiter := &limitedFakeLimiter{limit: 5}
 	cfg := config.MustLoad()
 
-	svc := service.NewUserService(mockRepo, limiter, cfg, nil)
+	svc := service.NewAuthService(mockRepo, limiter, cfg)
 	user := &userv1.User{
-		Id:       "u-1",
-		Name:     "Test",
-		Barcode:  "123456",
-		Password: "12345678",
-		Role:     "student",
+		Id:      "u-1",
+		Name:    "Test",
+		Barcode: "123456",
+		Role:    "student",
 	}
 	mockRepo.On("GetUserByBarcode", mock.Anything, "123456").Return(user, nil)
-	resp, err := svc.Login(context.Background(), "123456", "12347456")
+	resp, err := svc.Login(context.Background(), service.LoginInput{Barcode: "123456", Password: "12347456"})
 
 	for i := 0; i < 5; i++ {
-		resp, err = svc.Login(context.Background(), "123456", "12345644")
+		resp, err = svc.Login(context.Background(), service.LoginInput{Barcode: "123456", Password: "12345644"})
 	}
 	assert.Nil(t, resp)
 	assert.Error(t, err)

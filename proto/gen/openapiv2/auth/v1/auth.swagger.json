@@ -150,6 +150,9 @@
         "role": {
           "type": "string",
           "title": "student, teacher, admin"
+        },
+        "email": {
+          "type": "string"
         }
       }
     },
@@ -160,6 +163,12 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "barcode": {
+          "type": "string"
+        },
+        "role": {
           "type": "string"
         },
         "email": {

@@ -17,6 +17,6 @@ CREATE TABLE IF NOT EXISTS user_groups
     user_id  UUID NOT NULL,
     group_id UUID NOT NULL,
     PRIMARY KEY (user_id, group_id),
-    FOREIGN KEY (user_id) REFERENCES "user".user_profiles (id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES "auth".users (id) ON DELETE CASCADE,
     FOREIGN KEY (group_id) REFERENCES groups (id) ON DELETE CASCADE
 );

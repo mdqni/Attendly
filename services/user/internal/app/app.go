@@ -1,10 +1,12 @@
 package app
 
 import (
+	"context"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/mdqni/Attendly/services/user/internal/client"
 	"github.com/mdqni/Attendly/services/user/internal/config"
 	"github.com/mdqni/Attendly/services/user/internal/delivery/grpc"
+	"github.com/mdqni/Attendly/services/user/internal/kafka"
 	"github.com/mdqni/Attendly/services/user/internal/repository/postgres"
 	"github.com/mdqni/Attendly/services/user/internal/service"
 	"github.com/mdqni/Attendly/shared/interceptor"
@@ -16,6 +18,7 @@ import (
 	"google.golang.org/grpc/status"
 	"log/slog"
 	"net"
+	"os"
 )
 
 type App struct {
@@ -27,6 +30,8 @@ type App struct {
 
 func NewApp(cfg *config.Config, log *slog.Logger, limiter *redisUtils.Limiter, group *client.GroupClient) *App {
 	const op = "app.NewApp"
+
+	ctx := context.Background()
 
 	recoveryOpts := []recovery.Option{
 		recovery.WithRecoveryHandler(func(p interface{}) (err error) {
@@ -43,6 +48,18 @@ func NewApp(cfg *config.Config, log *slog.Logger, limiter *redisUtils.Limiter, g
 	}
 
 	svc := service.NewUserService(repo, cfg, group)
+
+	consumer, err := kafka.NewEventConsumer(os.Getenv("KAFKA_BROKERS"), svc)
+	if err != nil {
+		log.Error("Kafka init error: %v", err)
+	}
+	go func() {
+		err := consumer.Start(ctx)
+		if err != nil {
+			log.Error("Consumer error: %v", err)
+			panic(err)
+		}
+	}()
 
 	server := g.NewServer(g.ChainUnaryInterceptor(
 		recovery.UnaryServerInterceptor(recoveryOpts...),

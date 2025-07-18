@@ -35,7 +35,7 @@ func (r *PostgresRepo) CreateGroup(ctx context.Context, groupName string, depart
 
 	var id string
 	err := r.db.QueryRow(ctx, `
-		INSERT INTO groups (name, department, year)
+		INSERT INTO "group".groups (name, department, year)
 		VALUES ($1, $2, $3)
 		RETURNING id
 	`, groupName, department, year).Scan(&id)
@@ -58,7 +58,7 @@ func (r *PostgresRepo) CreateGroup(ctx context.Context, groupName string, depart
 func (r *PostgresRepo) AddUserToGroup(ctx context.Context, groupID string, userID string) (bool, error) {
 	op := "groups.storage.postgres.AddUserToGroup"
 	const query = `
-		INSERT INTO user_groups (user_id, group_id)
+		INSERT INTO "group".user_groups (user_id, group_id)
 		VALUES ($1, $2)
 		ON CONFLICT DO NOTHING;
 	`
@@ -76,7 +76,7 @@ func (r *PostgresRepo) AddUserToGroup(ctx context.Context, groupID string, userI
 }
 
 func (r *PostgresRepo) RemoveUserFromGroup(ctx context.Context, groupID, userID string) (bool, error) {
-	const query = `DELETE FROM user_groups
+	const query = `DELETE FROM "group".user_groups
 		WHERE user_id = $1 AND group_id = $2;`
 	row, err := r.db.Exec(ctx, query, userID, groupID)
 	if err != nil {
@@ -90,7 +90,7 @@ func (r *PostgresRepo) RemoveUserFromGroup(ctx context.Context, groupID, userID 
 
 func (r *PostgresRepo) GetGroup(ctx context.Context, groupID string) (*group1.Group, error) {
 	var group group1.Group
-	err := r.db.QueryRow(ctx, "SELECT id, name, department, year FROM groups WHERE id = $1", groupID).
+	err := r.db.QueryRow(ctx, `SELECT id, name, department, year FROM "group".groups WHERE id = $1`, groupID).
 		Scan(&group.Id, &group.Name, &group.Department, &group.Year)
 
 	if err != nil {
@@ -111,9 +111,9 @@ func (r *PostgresRepo) GetGroup(ctx context.Context, groupID string) (*group1.Gr
 func (r *PostgresRepo) ListUsersInGroup(ctx context.Context, groupID string) ([]*userv1.User, error) {
 	const query = `
 		SELECT u.id, u.name, u.barcode, r.name
-		FROM user_groups ug
-		JOIN "user".users u ON u.id = ug.user_id
-		JOIN "user".roles r ON r.id = u.role_id
+		FROM "group".user_groups ug
+		JOIN "auth".users u ON u.id = ug.user_id
+		JOIN "auth".roles r ON r.id = u.role_id
 		WHERE ug.group_id = $1;
 	`
 
@@ -127,7 +127,7 @@ func (r *PostgresRepo) ListUsersInGroup(ctx context.Context, groupID string) ([]
 
 	for rows.Next() {
 		var user userv1.User
-		err := rows.Scan(&user.Id, &user.Name, &user.Barcode, &user.Role)
+		err := rows.Scan(&user.Id, &user.Name)
 		if err != nil {
 			return nil, fmt.Errorf("row scan error: %w", err)
 		}
@@ -149,7 +149,7 @@ func (r *PostgresRepo) IsInGroup(ctx context.Context, groupID string, userId str
 	const query = `
 		SELECT EXISTS (
 		SELECT 1
-		FROM user_groups
+		FROM "group".user_groups
 		where user_id = $1 AND group_id = $2
 		)`
 	var exists bool

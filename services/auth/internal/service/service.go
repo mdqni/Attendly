@@ -13,6 +13,7 @@ type RegisterInput struct {
 	Name     string
 	Barcode  string
 	Password string
+	Email    string
 	Role     string
 }
 

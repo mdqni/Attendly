@@ -1,6 +1,81 @@
 version: "3.9"
 
+
+networks:
+  kafka-net:
+    driver: bridge
+
 services:
+  kafka1:
+    image: 'bitnami/kafka:3.3.1'
+    container_name: kafka1
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka1:9092
+      - KAFKA_CFG_BROKER_ID=0
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka1:9093,1@kafka2:9093,2@kafka3:9093
+      - KAFKA_KRAFT_CLUSTER_ID=r4zt_wrqTRuT7W2NJsB_GA
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    volumes:
+      - kafka1_data:/bitnami/kafka
+    networks:
+      - kafka-net
+  kafka2:
+    image: bitnami/kafka:3.3.1
+    container_name: kafka2
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka2:9092
+      - KAFKA_CFG_BROKER_ID=1
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka1:9093,1@kafka2:9093,2@kafka3:9093
+      - KAFKA_KRAFT_CLUSTER_ID=r4zt_wrqTRuT7W2NJsB_GA
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    volumes:
+      - kafka2_data:/bitnami/kafka
+    networks:
+      - kafka-net
+
+  kafka3:
+    image: bitnami/kafka:3.3.1
+    container_name: kafka3
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka3:9092
+      - KAFKA_CFG_BROKER_ID=2
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka1:9093,1@kafka2:9093,2@kafka3:9093
+      - KAFKA_KRAFT_CLUSTER_ID=r4zt_wrqTRuT7W2NJsB_GA
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    volumes:
+      - kafka3_data:/bitnami/kafka
+    networks:
+      - kafka-net
+  kafka-ui:
+    container_name: kafka-ui
+    image: 'provectuslabs/kafka-ui:latest'
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+    ports:
+      - "8080:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=dev-cluster
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka1:9092,kafka2:9092,kafka3:9092
+      - DYNAMIC_CONFIG_ENABLED=true
+    networks:
+      - kafka-net
   postgres:
     image: postgres:15-alpine
     container_name: attendly-postgres
@@ -13,11 +88,14 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - kafka-net
 
   redis:
     image: redis:7-alpine
@@ -25,6 +103,8 @@ services:
     restart: always
     ports:
       - "6379:6379"
+    networks:
+      - kafka-net
 
   auth:
     build:
@@ -40,10 +120,13 @@ services:
       retries: 5
     ports:
       - "50050:50050"
+    networks:
+      - kafka-net
     environment:
       - CONN_STRING=postgresql://postgres:postgres@postgres:5432/attendly?sslmode=disable
       - REDIS_ADDR=redis:6379
       - JWT_SECRET=SUPER-SECRET-CODE
+      - KAFKA_BROKERS=kafka1:9092,kafka2:9092,kafka3:9092
   user:
     build:
       context: .
@@ -64,6 +147,10 @@ services:
       - CONN_STRING=postgresql://postgres:postgres@postgres:5432/attendly?sslmode=disable
       - REDIS_ADDR=redis:6379
       - JWT_SECRET=SUPER-SECRET-CODE
+      - KAFKA_BROKERS=kafka1:9092,kafka2:9092,kafka3:9092
+    networks:
+      - kafka-net
+
 
   group:
     build:
@@ -83,6 +170,10 @@ services:
       - REDIS_ADDR=redis:6379
       - JWT_SECRET=SUPER-SECRET-CODE
       - USER_SERVICE_ADDR=user:50051
+      - KAFKA_BROKERS=kafka1:9092,kafka2:9092,kafka3:9092
+    networks:
+      - kafka-net
+
     healthcheck:
       test: [ "CMD", "grpc_health_probe", "-addr=localhost:50052" ]
       interval: 5s
@@ -96,9 +187,13 @@ services:
       - redis
     ports:
       - "50054:50054"
+    networks:
+      - kafka-net
     environment:
       - REDIS_ADDR=redis:6379
       - JWT_SECRET=SUPER-SECRET-CODE
+      - KAFKA_BROKERS=kafka1:9092,kafka2:9092,kafka3:9092
+
     healthcheck:
       test: [ "CMD", "grpc_health_probe", "-addr=localhost:50054" ]
       interval: 5s
@@ -106,4 +201,7 @@ services:
       retries: 5
 
 volumes:
+  kafka1_data:
+  kafka2_data:
+  kafka3_data:
   pgdata:

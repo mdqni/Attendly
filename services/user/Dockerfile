@@ -1,5 +1,9 @@
 FROM golang:1.24 AS builder
 
+RUN apt-get update && apt-get install -y \
+    librdkafka-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY go.mod go.sum ./
@@ -7,11 +11,11 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o user ./services/user/cmd/main.go
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -tags netgo -o user ./services/user/cmd/main.go
 
-FROM alpine:latest
+FROM debian:bookworm-slim
 
-RUN apk --no-cache add ca-certificates
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
