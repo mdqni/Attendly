@@ -28,7 +28,7 @@ func New(connString string) (*PostgresRepo, error) {
 func (r *PostgresRepo) GetUserByID(ctx context.Context, id string) (*userv1.User, error) {
 	query := `
 	SELECT id, name, email, avatar_url
-	FROM "user".user_profiles
+	FROM "userschema".user_profiles
 	WHERE id = $1
 	`
 	row := r.db.QueryRow(ctx, query, id)
@@ -50,7 +50,7 @@ func (r *PostgresRepo) GetUsers(ctx context.Context, page, limit int32) ([]*user
 	offset := (page - 1) * limit
 	query := `
 	SELECT id, name, email, avatar_url
-	FROM "user".user_profiles
+	FROM "userschema".user_profiles
 	ORDER BY name
 	OFFSET $1 LIMIT $2
 	`
@@ -106,7 +106,7 @@ func (r *PostgresRepo) GetAllUsers(ctx context.Context, page int, limit int) ([]
 
 func (r *PostgresRepo) UpdateUser(ctx context.Context, u *userv1.User) (*userv1.User, error) {
 	query := `
-	UPDATE "user".user_profiles
+	UPDATE "userschema".user_profiles
 	SET name = $2, email = $3, avatar_url = $4
 	WHERE id = $1
 	RETURNING id, name, email, avatar_url
@@ -123,7 +123,7 @@ func (r *PostgresRepo) UpdateUser(ctx context.Context, u *userv1.User) (*userv1.
 }
 
 func (r *PostgresRepo) DeleteUser(ctx context.Context, id string) error {
-	cmd, err := r.db.Exec(ctx, `DELETE FROM "user".user_profiles WHERE id = $1`, id)
+	cmd, err := r.db.Exec(ctx, `DELETE FROM "userschema".user_profiles WHERE id = $1`, id)
 	if err != nil {
 		return fmt.Errorf("repo.DeleteUser: %w", err)
 	}
@@ -139,7 +139,7 @@ func (r *PostgresRepo) IsUserInGroup(ctx context.Context, userID, groupID string
 
 func (r *PostgresRepo) CreateUser(ctx context.Context, u *domain.User) (*userv1.User, error) {
 	query := `
-	INSERT INTO "user".user_profiles (id, email, name)
+	INSERT INTO "userschema".user_profiles (id, email, name)
 	VALUES ($1, $2, $3)
 	RETURNING id, name, email, avatar_url
 	`

@@ -1,4 +1,4 @@
-SET search_path TO "user";
+SET search_path TO "userschema";
 
 DROP TABLE IF EXISTS role_permissions;
 DROP TABLE IF EXISTS permissions;

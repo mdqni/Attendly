@@ -1,5 +1,5 @@
-CREATE SCHEMA IF NOT EXISTS "user";
-SET search_path TO "user";
+CREATE SCHEMA IF NOT EXISTS "userschema";
+SET search_path TO "userschema";
 
 CREATE TABLE IF NOT EXISTS user_profiles
 (
