@@ -10,7 +10,6 @@ import (
 	"github.com/mdqni/Attendly/services/user/internal/repository/postgres"
 	"github.com/mdqni/Attendly/services/user/internal/service"
 	"github.com/mdqni/Attendly/shared/interceptor"
-	"github.com/mdqni/Attendly/shared/redisUtils"
 	g "google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/health"
@@ -28,7 +27,7 @@ type App struct {
 	healthServer *health.Server
 }
 
-func NewApp(cfg *config.Config, log *slog.Logger, limiter *redisUtils.Limiter, group *client.GroupClient) *App {
+func NewApp(cfg *config.Config, log *slog.Logger, group *client.GroupClient) *App {
 	const op = "app.NewApp"
 
 	ctx := context.Background()

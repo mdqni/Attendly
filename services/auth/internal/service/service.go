@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	userv1 "github.com/mdqni/Attendly/proto/gen/go/user/v1"
 )
 
 type AuthService interface {
@@ -23,7 +24,7 @@ type LoginInput struct {
 }
 
 type AuthResult struct {
-	UserID       string
+	User         userv1.User
 	AccessToken  string
 	RefreshToken string
 }

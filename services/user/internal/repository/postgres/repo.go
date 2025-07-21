@@ -3,8 +3,11 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"github.com/mdqni/Attendly/shared/domain"
+	"log"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	userv1 "github.com/mdqni/Attendly/proto/gen/go/user/v1"
@@ -33,12 +36,12 @@ func (r *PostgresRepo) GetUserByID(ctx context.Context, id string) (*userv1.User
 	`
 	row := r.db.QueryRow(ctx, query, id)
 	var u userv1.User
-	err := row.Scan(&u.Id, &u.Name, &u.Email, &u.AvatarUrl)
+	err := row.Scan(u.Id, u.Name, u.Email, u.AvatarUrl)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, sql.ErrNoRows) {
 			return nil, errPkg.ErrUserNotFound
 		}
-		return nil, fmt.Errorf("repo.GetUserByID: %w", err)
+		return nil, fmt.Errorf("GetUserByID: %w", err)
 	}
 	return &u, nil
 }
@@ -80,7 +83,7 @@ func (r *PostgresRepo) GetAllUsers(ctx context.Context, page int, limit int) ([]
 	offset := (page - 1) * limit
 	query := `
 	SELECT id, name, email, avatar_url
-	FROM "user".user_profiles
+	FROM "userschema".user_profiles
 	ORDER BY name
 	OFFSET $1 LIMIT $2
 	`
@@ -138,16 +141,17 @@ func (r *PostgresRepo) IsUserInGroup(ctx context.Context, userID, groupID string
 }
 
 func (r *PostgresRepo) CreateUser(ctx context.Context, u *domain.User) (*userv1.User, error) {
+	log.Println(u)
 	query := `
 	INSERT INTO "userschema".user_profiles (id, email, name)
 	VALUES ($1, $2, $3)
-	RETURNING id, name, email, avatar_url
+	RETURNING id, name, email, COALESCE(avatar_url, '')
 	`
 
 	row := r.db.QueryRow(ctx, query, u.ID, u.Email, u.Name)
 
 	var result userv1.User
-	if err := row.Scan(&result.Id, &result.Name, &result.Email, &result.Name); err != nil {
+	if err := row.Scan(&result.Id, &result.Name, &result.Email, &result.AvatarUrl); err != nil {
 		return nil, fmt.Errorf("repo.CreateUser: %w", err)
 	}
 	return &result, nil

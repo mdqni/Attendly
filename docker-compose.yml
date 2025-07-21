@@ -132,10 +132,17 @@ services:
       context: .
       dockerfile: services/user/Dockerfile
     depends_on:
+      kafka1:
+        condition: service_started
+      kafka2:
+        condition: service_started
+      kafka3:
+        condition: service_started
       postgres:
         condition: service_healthy
       auth:
         condition: service_started
+
     healthcheck:
       test: [ "CMD", "grpc_health_probe", "-addr=localhost:50051" ]
       interval: 5s

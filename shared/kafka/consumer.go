@@ -21,7 +21,7 @@ func NewConsumer(brokers, groupID string, topics []string) (*Consumer, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	log.Printf("Created Consumer %v\n", c)
 	err = c.SubscribeTopics(topics, nil)
 	if err != nil {
 		return nil, err

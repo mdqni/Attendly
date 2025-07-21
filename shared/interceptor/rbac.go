@@ -26,7 +26,6 @@ func RBACInterceptor(secret string) grpc.UnaryServerInterceptor {
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
 		log.Println(info.FullMethod)
-		_, err := handler(ctx, req)
 		if _, ok := openMethods[info.FullMethod]; ok {
 			return handler(ctx, req)
 		}

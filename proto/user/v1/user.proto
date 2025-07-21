@@ -45,7 +45,7 @@ message User {
   string barcode = 3;
   string role = 4;
   string email = 5;
-  string avatar_url = 6;
+  optional string avatar_url = 6;
 }
 
 message GetUserRequest {

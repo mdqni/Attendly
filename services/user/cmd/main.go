@@ -26,8 +26,6 @@ func main() {
 
 	rdb := redisUtils.NewRedisClient(cfg.Redis.Addr)
 
-	limiter := redisUtils.NewLimiter(rdb)
-
 	pong, err := rdb.Ping(context.Background()).Result()
 	if err != nil {
 		log.Error("Redis connection failed: %v", err)
@@ -40,7 +38,7 @@ func main() {
 	if err != nil {
 		log.Error("Group client failed: %v", err)
 	}
-	app := app2.NewApp(cfg, log, limiter, group)
+	app := app2.NewApp(cfg, log, group)
 	go func() {
 		app.Run()
 	}()

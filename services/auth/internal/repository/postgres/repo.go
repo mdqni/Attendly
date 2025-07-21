@@ -29,6 +29,7 @@ func New(connString string) (*PostgresRepo, error) {
 
 func (r *PostgresRepo) SaveUser(ctx context.Context, user model.UserWithPassword) error {
 	const op = "repo.SaveUser"
+	log.Println("op", op)
 	var roleID int
 	err := r.db.QueryRow(ctx, `SELECT id FROM "auth".roles WHERE name = $1`, user.Role).Scan(&roleID)
 	if err != nil {
@@ -43,8 +44,11 @@ func (r *PostgresRepo) SaveUser(ctx context.Context, user model.UserWithPassword
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			log.Printf("op %s, PG ERROR: %s, %s, %s", op, pgErr.Code, pgErr.Message, pgErr.ConstraintName)
+
 			return errs.ErrUserAlreadyExists
 		}
+
 		return fmt.Errorf("failed to save user: %w", err)
 	}
 
@@ -52,6 +56,7 @@ func (r *PostgresRepo) SaveUser(ctx context.Context, user model.UserWithPassword
 }
 
 func (r *PostgresRepo) GetUserByBarcode(ctx context.Context, barcode string) (*model.UserWithPassword, error) {
+	log.Printf("GetUserByBarcode: %s", barcode)
 	row := r.db.QueryRow(ctx, `
         SELECT u.id,u.name,u.barcode,u.password,r.name
         FROM "auth".users u
@@ -62,16 +67,19 @@ func (r *PostgresRepo) GetUserByBarcode(ctx context.Context, barcode string) (*m
 	var u model.UserWithPassword
 	if err := row.Scan(&u.ID, &u.Name, &u.Barcode, &u.Password, &u.Role); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			log.Println("repo.GetUserByBarcode: ", err)
+			log.Println("repo.GetUserByBarcode with ErrNoRows: ", err)
 			return nil, errs.ErrUserNotFound
 		}
 		log.Println(err)
-		return nil, fmt.Errorf("repo.GetUserByBarcode: %w", err)
+		return nil, fmt.Errorf("ERR repo.GetUserByBarcode: %w", err)
 	}
+	log.Println("Success repo.GetUserByBarcode: ", u)
 	return &u, nil
 }
 
 func (r *PostgresRepo) GetPermissions(ctx context.Context, userID string) ([]string, error) {
+	const op = "repo.GetPermissions"
+	log.Println("op", op)
 	rows, err := r.db.Query(ctx, `
         SELECT p.action
         FROM "auth".role_permissions rp

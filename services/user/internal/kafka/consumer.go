@@ -15,7 +15,7 @@ type EventConsumer struct {
 }
 
 func NewEventConsumer(brokers string, svc service.UserService) (*EventConsumer, error) {
-	k, err := kafka.NewConsumer(brokers, "user-consumer-group", []string{"auth.user_registered"})
+	k, err := kafka.NewConsumer(brokers, "auth-service-consumer-1", []string{"auth.user_registered"})
 	if err != nil {
 		return nil, err
 	}
@@ -32,12 +32,14 @@ func (e *EventConsumer) Start(ctx context.Context) error {
 			log.Printf("Failed to unmarshal event: %v", err)
 			return err
 		}
+
 		log.Printf("Received user_registered: %+v", event)
 
 		user := domain.User{
 			ID:    event.UserID,
 			Email: event.Email,
 			Role:  event.Role,
+			Name:  event.Name,
 		}
 
 		result, err := e.svc.CreateUser(ctx, &user)

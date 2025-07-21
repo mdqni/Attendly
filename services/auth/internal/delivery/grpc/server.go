@@ -42,6 +42,8 @@ func (h *authServer) Login(ctx context.Context, req *authv1.LoginRequest) (*auth
 }
 
 func (h *authServer) Register(ctx context.Context, req *authv1.RegisterRequest) (*authv1.AuthResponse, error) {
+	const op = "grpc.auth.register"
+	log.Println("op", op)
 	if strings.TrimSpace(req.Name) == "" ||
 		strings.TrimSpace(req.Barcode) == "" ||
 		strings.TrimSpace(req.Password) == "" ||
@@ -56,6 +58,7 @@ func (h *authServer) Register(ctx context.Context, req *authv1.RegisterRequest) 
 		Email:    req.GetEmail(),
 		Role:     req.GetRole(),
 	})
+	log.Println("Resp: ", resp)
 	if err != nil {
 		log.Println("register error:", err)
 		return nil, err
@@ -64,5 +67,6 @@ func (h *authServer) Register(ctx context.Context, req *authv1.RegisterRequest) 
 	return &authv1.AuthResponse{
 		AccessToken:  resp.AccessToken,
 		RefreshToken: resp.RefreshToken,
+		User:         &resp.User,
 	}, nil
 }

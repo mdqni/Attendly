@@ -24,9 +24,10 @@ func NewEventProducer(kafkaBrokers string) (*EventProducer, error) {
 	}, nil
 }
 
-func (e *EventProducer) SendUserRegisteredEvent(ctx context.Context, userID, email, role string) error {
+func (e *EventProducer) SendUserRegisteredEvent(ctx context.Context, userID, email, role, name string) error {
 	event := domain.UserRegisteredEvent{
 		UserID: userID,
+		Name:   name,
 		Email:  email,
 		Role:   role,
 	}

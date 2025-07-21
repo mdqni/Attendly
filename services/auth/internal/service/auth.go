@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/google/uuid"
+	userv1 "github.com/mdqni/Attendly/proto/gen/go/user/v1"
 	"github.com/mdqni/Attendly/services/auth/internal/config"
 	"github.com/mdqni/Attendly/services/auth/internal/domain/model"
 	kafka2 "github.com/mdqni/Attendly/services/auth/internal/kafka"
@@ -27,63 +28,54 @@ func NewAuthService(repo repository.AuthRepository, limiter redisUtils.LimiterIn
 }
 
 func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthResult, error) {
-	if input.Name == "" || input.Barcode == "" || input.Password == "" || input.Role == "" {
-		return nil, errs.ErrMissingField
-	}
-	if len(input.Password) < 8 {
-		return nil, errs.ErrPasswordTooShort
-	}
+	const op = "service.auth.register"
+	log.Println("op", op)
 
-	exists, err := s.repo.GetUserByBarcode(ctx, input.Barcode)
-	if err == nil && exists != nil {
-		return nil, errs.ErrUserAlreadyExists
-	}
-
-	hashed, err := passwordUtils.HashPassword(input.Password)
-	if err != nil {
+	if err := validateRegisterInput(input); err != nil {
 		return nil, err
 	}
 
-	user := model.UserWithPassword{
-		ID:       uuid.NewString(),
-		Name:     input.Name,
-		Barcode:  input.Barcode,
-		Email:    input.Email,
-		Password: hashed,
-		Role:     input.Role,
-	}
-
+	user := createUserFromInput(input)
 	if err := s.repo.SaveUser(ctx, user); err != nil {
+		log.Println("op", op, "SaveUser", err)
 		return nil, err
 	}
 
 	perms, err := s.repo.GetPermissions(ctx, user.ID)
 	if err != nil {
+		log.Println("op", op, "GetPermissions", err)
 		return nil, err
 	}
 
 	accessToken, err := token.GenerateJWT(s.cfg.JwtSecret, user.ID, perms, time.Hour)
 	if err != nil {
+		log.Println("op", op, "GenerateJWT", err)
 		return nil, err
 	}
 
 	refreshToken, err := token.GenerateRefreshToken()
 	if err != nil {
+		log.Println("op", op, "GenerateRefreshToken", err)
 		return nil, err
 	}
 
-	err = s.kafkaProducer.SendUserRegisteredEvent(ctx, user.ID, user.Email, user.Role)
-	if err != nil {
-		log.Printf("Failed to send Kafka kafka: %v", err)
+	if err := s.kafkaProducer.SendUserRegisteredEvent(ctx, user.ID, user.Email, user.Role, user.Name); err != nil {
+		log.Println("op", op, "Kafka send failed", err)
 	}
 
+	log.Println("Register success:", user.ID)
 	return &AuthResult{
-		UserID:       user.ID,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+		User: userv1.User{
+			Id:      user.ID,
+			Name:    user.Name,
+			Barcode: user.Barcode,
+			Role:    user.Role,
+			Email:   user.Email,
+		},
 	}, nil
 }
-
 func (s *authService) Login(ctx context.Context, input LoginInput) (*AuthResult, error) {
 	if input.Barcode == "" || input.Password == "" {
 		return nil, errs.ErrMissingField
@@ -123,8 +115,38 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (*AuthResult,
 	}
 
 	return &AuthResult{
-		UserID:       user.ID,
+		User: userv1.User{
+			Id:        user.ID,
+			Name:      user.Name,
+			Barcode:   user.Barcode,
+			Role:      user.Role,
+			Email:     user.Email,
+			AvatarUrl: nil,
+		},
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
+}
+
+func validateRegisterInput(input RegisterInput) error {
+	if input.Name == "" || input.Barcode == "" || input.Password == "" || input.Role == "" {
+		return errs.ErrMissingField
+	}
+	if len(input.Password) < 8 {
+		return errs.ErrPasswordTooShort
+	}
+	return nil
+}
+
+func createUserFromInput(input RegisterInput) model.UserWithPassword {
+	hashed, _ := passwordUtils.HashPassword(input.Password)
+
+	return model.UserWithPassword{
+		ID:       uuid.NewString(),
+		Name:     input.Name,
+		Barcode:  input.Barcode,
+		Email:    input.Email,
+		Password: hashed,
+		Role:     input.Role,
+	}
 }
