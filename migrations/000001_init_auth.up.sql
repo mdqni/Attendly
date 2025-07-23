@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS role_permissions
 CREATE TABLE IF NOT EXISTS refresh_tokens
 (
     token      TEXT PRIMARY KEY,
-    user_id    UUID REFERENCES users (id) ON DELETE CASCADE,
+    user_id    UUID REFERENCES auth.users (id) ON DELETE CASCADE,
     expires_at TIMESTAMP NOT NULL
 );
 
