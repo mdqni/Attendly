@@ -1,0 +1,9 @@
+.idea
+.vscode
+
+.git
+.gitignore
+
+migrations/
+
+README.md

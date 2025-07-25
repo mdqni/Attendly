@@ -9,6 +9,7 @@ import (
 
 type CustomClaims struct {
 	UserID string   `json:"user-id"`
+	Role   string   `json:"role"`
 	Perms  []string `json:"perms"`
 	jwt.RegisteredClaims
 }
@@ -28,9 +29,10 @@ func ParseJWT(tokenStr, secret string) (*CustomClaims, error) {
 	return claims, nil
 }
 
-func GenerateJWT(secret, userID string, perms []string, ttl time.Duration) (string, error) {
+func GenerateJWT(secret, userID, role string, perms []string, ttl time.Duration) (string, error) {
 	claims := CustomClaims{
 		UserID: userID,
+		Role:   role,
 		Perms:  perms,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),

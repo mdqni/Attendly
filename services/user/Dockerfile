@@ -9,7 +9,9 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY . .
+COPY services/user/cmd/ ./services/user/cmd/
+COPY services/user/internal/ ./services/user/internal/
+COPY shared/ ./shared/
 
 RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -tags netgo -o user ./services/user/cmd/main.go
 
@@ -20,6 +22,7 @@ RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/
 WORKDIR /app
 
 COPY --from=builder /app/user .
+
 COPY --from=builder /app/services/user/internal/migrations /app/internal/migrations
 
 EXPOSE 50051

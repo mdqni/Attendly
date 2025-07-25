@@ -26,6 +26,7 @@ func RBACInterceptor(secret string) grpc.UnaryServerInterceptor {
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
 		log.Println(info.FullMethod)
+
 		if _, ok := openMethods[info.FullMethod]; ok {
 			return handler(ctx, req)
 		}
@@ -45,7 +46,9 @@ func RBACInterceptor(secret string) grpc.UnaryServerInterceptor {
 		if err != nil {
 			return nil, status.Error(codes.Unauthenticated, "invalid token")
 		}
-
+		if claims.Role == "admin" {
+			return handler(ctx, req)
+		}
 		action := normalizeAction(info.FullMethod)
 		log.Println(action)
 		if !contains(claims.Perms, action) {

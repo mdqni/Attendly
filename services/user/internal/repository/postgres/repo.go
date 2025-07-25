@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/mdqni/Attendly/shared/domain"
 	"log"
@@ -35,14 +36,18 @@ func (r *PostgresRepo) GetUserByID(ctx context.Context, id string) (*userv1.User
 	WHERE id = $1
 	`
 	row := r.db.QueryRow(ctx, query, id)
+
+	var uuidID uuid.UUID
 	var u userv1.User
-	err := row.Scan(u.Id, u.Name, u.Email, u.AvatarUrl)
+
+	err := row.Scan(&uuidID, &u.Name, &u.Email, &u.AvatarUrl)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, sql.ErrNoRows) {
 			return nil, errPkg.ErrUserNotFound
 		}
 		return nil, fmt.Errorf("GetUserByID: %w", err)
 	}
+	u.Id = uuidID.String()
 	return &u, nil
 }
 

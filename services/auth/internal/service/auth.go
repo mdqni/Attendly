@@ -47,7 +47,7 @@ func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthR
 		return nil, err
 	}
 
-	accessToken, err := token.GenerateJWT(s.cfg.JwtSecret, user.ID, perms, time.Hour)
+	accessToken, err := token.GenerateJWT(s.cfg.JwtSecret, user.ID, input.Role, perms, time.Hour)
 	if err != nil {
 		log.Println("op", op, "GenerateJWT", err)
 		return nil, err
@@ -104,7 +104,7 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (*AuthResult,
 		return nil, err
 	}
 
-	accessToken, err := token.GenerateJWT(s.cfg.JwtSecret, user.ID, perms, time.Hour)
+	accessToken, err := token.GenerateJWT(s.cfg.JwtSecret, user.ID, user.Role, perms, time.Hour)
 	if err != nil {
 		return nil, err
 	}
