@@ -74,6 +74,15 @@ func (g *groupServer) ListUsersInGroup(ctx context.Context, req *group.ListUsers
 	return &group.ListUsersInGroupResponse{User: users}, nil
 }
 
+func (g *groupServer) IsInGroup(ctx context.Context, req *group.IsInGroupRequest) (*group.IsInGroupResponse, error) {
+	grp, err := g.service.IsInGroup(ctx, req.GroupId, req.UserId)
+	if err != nil {
+		log.Println("IsInGroup error:", err)
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &group.IsInGroupResponse{IsMember: grp}, nil
+}
+
 func Register(gRPCServer *grpc.Server, svc service.GroupService) {
 	if gRPCServer == nil || svc == nil {
 		log.Fatal("Register: gRPC server or service is nil")

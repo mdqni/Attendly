@@ -84,11 +84,13 @@ func (s *groupService) RemoveUserFromGroup(ctx context.Context, groupId string, 
 }
 
 func (s *groupService) ListUsersInGroup(ctx context.Context, groupID string) ([]*userv1.User, error) {
+	const op = "service.ListUsersInGroup"
 	users, err := s.repo.ListUsersInGroup(ctx, groupID)
 	if err != nil {
 		if errors.Is(err, errs.ErrGroupIsEmpty) {
 			return nil, status.Error(codes.NotFound, "group is empty")
 		}
+		log.Println("op: ", op, "err: ", err)
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 	return users, nil

@@ -127,10 +127,11 @@ func (r *PostgresRepo) ListUsersInGroup(ctx context.Context, groupID string) ([]
 
 	for rows.Next() {
 		var user userv1.User
-		err := rows.Scan(&user.Id, &user.Name)
-		if err != nil {
+		var role string
+		if err := rows.Scan(&user.Id, &user.Name, &user.Barcode, &role); err != nil {
 			return nil, fmt.Errorf("row scan error: %w", err)
 		}
+		user.Role = role
 		users = append(users, &user)
 	}
 
