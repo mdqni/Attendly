@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 )
 
@@ -39,7 +40,8 @@ func main() {
 		log.Error("Group client failed: %v", err)
 	}
 
-	prod, err := kafka.NewEventProducer(os.Getenv("KAFKA_BROKERS"))
+	brokers := strings.Split(os.Getenv("KAFKA_BROKERS"), ",")
+	prod := kafka.NewEventProducer(brokers, "auth.user_registered")
 	if err != nil {
 		log.Error("kafka producer init error: %v", err)
 	}

@@ -14,6 +14,7 @@ import (
 var openMethods = map[string]struct{}{
 	"/auth.v1.AuthService/Login":    {},
 	"/auth.v1.AuthService/Register": {},
+	"/auth.v1.AuthService/Refresh":  {},
 }
 
 const userIDKey = "user_id_key"

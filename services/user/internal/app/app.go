@@ -48,7 +48,12 @@ func NewApp(cfg *config.Config, log *slog.Logger, group *client.GroupClient) *Ap
 
 	svc := service.NewUserService(repo, cfg, group)
 
-	consumer, err := kafka.NewEventConsumer(os.Getenv("KAFKA_BROKERS"), svc)
+	consumer, err := kafka.NewEventConsumer(
+		os.Getenv("KAFKA_BROKERS"),
+		"auth.user_registered",
+		"user-service-consumer-1",
+		svc,
+	)
 	if err != nil {
 		log.Error("Kafka init error: %v", err)
 	}

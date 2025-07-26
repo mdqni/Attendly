@@ -1,9 +1,5 @@
 FROM golang:1.24 AS builder
 
-RUN apt-get update && apt-get install -y \
-    librdkafka-dev \
-    && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 
 COPY go.mod go.sum ./
@@ -11,19 +7,18 @@ RUN go mod download
 
 COPY services/user/cmd/ ./services/user/cmd/
 COPY services/user/internal/ ./services/user/internal/
-COPY shared/ ./shared/
+COPY shared ./shared/
+COPY proto ./proto
 
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -tags netgo -o user ./services/user/cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -ldflags="-s -w" -o bin/user ./services/user/cmd/main.go
 
-FROM debian:bookworm-slim
-
-RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+FROM alpine:3.20
 
 WORKDIR /app
 
-COPY --from=builder /app/user .
-
-COPY --from=builder /app/services/user/internal/migrations /app/internal/migrations
+COPY --from=builder /app/bin/user .
+COPY --from=builder /app/services/user/internal/migrations ./internal/migrations
 
 EXPOSE 50051
 

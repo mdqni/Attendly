@@ -23,8 +23,29 @@ service AuthService {
   }
 
   rpc ValidateToken (ValidateTokenRequest) returns (ValidateTokenResponse);
+
+  rpc GetUserInfoById (GetUserInfoRequest) returns (GetUserInfoResponse);
+  rpc Refresh (RefreshTokenRequest) returns (AuthResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/refresh"
+      body: "*"
+    };
+  }
 }
 
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+message GetUserInfoResponse{
+  string name = 1;
+  string barcode = 2;
+  string role = 3;
+}
+
+message GetUserInfoRequest{
+  string user_id = 1;
+}
 message RegisterRequest {
   string name = 1;
   string barcode = 2;

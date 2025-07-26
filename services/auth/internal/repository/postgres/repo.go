@@ -55,6 +55,27 @@ func (r *PostgresRepo) SaveUser(ctx context.Context, user model.UserWithPassword
 	return err
 }
 
+func (r *PostgresRepo) GetUserById(ctx context.Context, id string) (*model.UserWithPassword, error) {
+	log.Printf("GetUserById: %s", id)
+	row := r.db.QueryRow(ctx, `
+        SELECT u.id,u.name,u.barcode,u.password,r.name
+        FROM "auth".users u
+        JOIN "auth".roles r ON u.role_id=r.id
+        WHERE u.id=$1
+    `, id)
+
+	var u model.UserWithPassword
+	if err := row.Scan(&u.ID, &u.Name, &u.Barcode, &u.Password, &u.Role); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("repo.GetUserById with ErrNoRows: ", err)
+			return nil, errs.ErrUserNotFound
+		}
+		log.Println(err)
+		return nil, fmt.Errorf("ERR repo.GetUserById: %w", err)
+	}
+	log.Println("Success repo.GetUserById: ", u)
+	return &u, nil
+}
 func (r *PostgresRepo) GetUserByBarcode(ctx context.Context, barcode string) (*model.UserWithPassword, error) {
 	log.Printf("GetUserByBarcode: %s", barcode)
 	row := r.db.QueryRow(ctx, `
@@ -105,12 +126,17 @@ func (r *PostgresRepo) GetPermissions(ctx context.Context, userID string) ([]str
 }
 
 func (r *PostgresRepo) SaveRefreshToken(ctx context.Context, token string, userID string, expiresAt time.Time) error {
-	_, err := r.db.Exec(ctx, `
+	_, err := r.db.Exec(ctx, `DELETE FROM "auth".refresh_tokens WHERE user_id = $1`, userID)
+	if err != nil {
+		return fmt.Errorf("repo.SaveRefreshToken (delete old): %w", err)
+	}
+
+	_, err = r.db.Exec(ctx, `
         INSERT INTO "auth".refresh_tokens (token, user_id, expires_at)
-        VALUES ($1,$2,$3)
+        VALUES ($1, $2, $3)
     `, token, userID, expiresAt)
 	if err != nil {
-		return fmt.Errorf("repo.SaveRefreshToken: %w", err)
+		return fmt.Errorf("repo.SaveRefreshToken (insert new): %w", err)
 	}
 	return nil
 }
@@ -133,7 +159,18 @@ func (r *PostgresRepo) ValidateRefreshToken(ctx context.Context, token string) (
 	}
 	return userID, nil
 }
-
+func (r *PostgresRepo) GetRefreshToken(ctx context.Context, token string) (*model.RefreshToken, error) {
+	row := r.db.QueryRow(ctx, `SELECT user_id, expires_at FROM "auth".refresh_tokens WHERE token=$1`, token)
+	var u model.RefreshToken
+	if err := row.Scan(&u.UserID, &u.ExpiresAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("repo.GetRefreshToken with ErrNoRows: ", err)
+			return nil, errs.ErrTokenNotFound
+		}
+		return nil, fmt.Errorf("repo.GetRefreshToken: %w", err)
+	}
+	return &u, nil
+}
 func (r *PostgresRepo) DeleteRefreshToken(ctx context.Context, token string) error {
 	_, err := r.db.Exec(ctx, `DELETE FROM "auth".refresh_tokens WHERE token=$1`, token)
 	if err != nil {

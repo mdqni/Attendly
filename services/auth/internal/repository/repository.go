@@ -9,7 +9,9 @@ import (
 type AuthRepository interface {
 	SaveUser(ctx context.Context, user model.UserWithPassword) error
 	GetUserByBarcode(ctx context.Context, barcode string) (*model.UserWithPassword, error)
+	GetUserById(ctx context.Context, id string) (*model.UserWithPassword, error)
 	GetPermissions(ctx context.Context, userID string) ([]string, error)
+	GetRefreshToken(ctx context.Context, token string) (*model.RefreshToken, error)
 	SaveRefreshToken(ctx context.Context, token string, userID string, expiresAt time.Time) error
 	ValidateRefreshToken(ctx context.Context, token string) (string, error)
 	DeleteRefreshToken(ctx context.Context, token string) error

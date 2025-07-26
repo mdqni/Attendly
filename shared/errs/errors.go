@@ -3,9 +3,10 @@ package errs
 import "errors"
 
 var (
+	ErrNoTopics        = errors.New("no topics provided")
 	ErrTokenNotFound   = errors.New("token not found")
 	ErrTokenExpired    = errors.New("token expired")
-	ErrInvalidPassword = errors.New("Invalid password")
+	ErrInvalidPassword = errors.New("invalid password")
 	//-------------------------
 	ErrUserNotFound         = errors.New("user not found")
 	ErrUserAlreadyExists    = errors.New("user already exists")

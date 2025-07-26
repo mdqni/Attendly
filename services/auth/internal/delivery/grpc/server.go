@@ -70,3 +70,25 @@ func (h *authServer) Register(ctx context.Context, req *authv1.RegisterRequest) 
 		User:         &resp.User,
 	}, nil
 }
+func (h *authServer) GetUserInfoById(ctx context.Context, request *authv1.GetUserInfoRequest) (*authv1.GetUserInfoResponse, error) {
+	user, err := h.service.GetUserInfoById(ctx, request.UserId)
+	if err != nil {
+		return nil, err
+	}
+	return &authv1.GetUserInfoResponse{
+		Name:    user.Name,
+		Barcode: user.Barcode,
+		Role:    user.Role,
+	}, nil
+}
+
+func (h *authServer) Refresh(ctx context.Context, req *authv1.RefreshTokenRequest) (*authv1.AuthResponse, error) {
+	refresh, err := h.service.Refresh(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return &authv1.AuthResponse{
+		AccessToken:  refresh.AccessToken,
+		RefreshToken: refresh.RefreshToken,
+	}, nil
+}
