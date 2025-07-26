@@ -48,6 +48,38 @@
         ]
       }
     },
+    "/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthService_Refresh",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AuthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1RefreshTokenRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
     "/v1/auth/register": {
       "post": {
         "operationId": "AuthService_Register",
@@ -124,6 +156,20 @@
         }
       }
     },
+    "v1GetUserInfoResponse": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "barcode": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        }
+      }
+    },
     "v1LoginRequest": {
       "type": "object",
       "properties": {
@@ -131,6 +177,14 @@
           "type": "string"
         },
         "password": {
+          "type": "string"
+        }
+      }
+    },
+    "v1RefreshTokenRequest": {
+      "type": "object",
+      "properties": {
+        "refreshToken": {
           "type": "string"
         }
       }

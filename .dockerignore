@@ -4,6 +4,20 @@
 .git
 .gitignore
 
-migrations/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
 
-README.md
+bin/
+vendor/
+
+.DS_Store
+Thumbs.db
+
+*.log
+
+docker-compose.override.yml

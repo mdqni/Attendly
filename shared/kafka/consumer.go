@@ -2,50 +2,41 @@ package kafka
 
 import (
 	"context"
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/segmentio/kafka-go"
 	"log"
 )
 
 type MessageHandler func(key, value []byte) error
 
 type Consumer struct {
-	c *kafka.Consumer
+	reader *kafka.Reader
 }
 
-func NewConsumer(brokers, groupID string, topics []string) (*Consumer, error) {
-	c, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": brokers,
-		"group.id":          groupID,
-		"auto.offset.reset": "earliest",
-	})
-	if err != nil {
-		return nil, err
+func NewConsumer(brokers []string, topic, groupID string) *Consumer {
+	return &Consumer{
+		reader: kafka.NewReader(kafka.ReaderConfig{
+			Brokers:  brokers,
+			GroupID:  groupID,
+			Topic:    topic,
+			MinBytes: 1,
+			MaxBytes: 10e6,
+		}),
 	}
-	log.Printf("Created Consumer %v\n", c)
-	err = c.SubscribeTopics(topics, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Consumer{c: c}, nil
 }
 
 func (c *Consumer) Start(ctx context.Context, handler MessageHandler) error {
+	defer c.reader.Close()
 	for {
-		select {
-		case <-ctx.Done():
-			log.Println("Consumer shutting down...")
-			return c.c.Close()
-		default:
-			msg, err := c.c.ReadMessage(-1)
-			if err != nil {
-				log.Printf("Error reading message: %v\n", err)
-				continue
-			}
+		msg, err := c.reader.ReadMessage(ctx)
+		if err != nil {
+			log.Printf("Error reading message: %v\n", err)
+			continue
+		}
 
-			if err := handler(msg.Key, msg.Value); err != nil {
-				log.Printf("Handler error: %v\n", err)
-			}
+		log.Printf("Consumed message: %s", string(msg.Value))
+
+		if err := handler(msg.Key, msg.Value); err != nil {
+			log.Printf("Handler error: %v\n", err)
 		}
 	}
 }

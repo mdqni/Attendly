@@ -26,10 +26,10 @@ func main() {
 		opts,
 	)
 	if err != nil {
-		log.Fatalf("failed to register gateway: %v", err)
+		log.Fatalf("failed to register api-gateway: %v", err)
 	}
 
-	log.Println("🚀 HTTP gateway listening on :8080")
+	log.Println("🚀 HTTP api-gateway listening on :8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

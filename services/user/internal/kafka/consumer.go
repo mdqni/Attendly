@@ -3,37 +3,36 @@ package kafka
 import (
 	"context"
 	"encoding/json"
+	"log"
+	"strings"
+
 	"github.com/mdqni/Attendly/services/user/internal/service"
 	"github.com/mdqni/Attendly/shared/domain"
-	"github.com/mdqni/Attendly/shared/kafka"
-	"log"
+	sharedkafka "github.com/mdqni/Attendly/shared/kafka"
 )
 
 type EventConsumer struct {
-	svc   service.UserService
-	kafka *kafka.Consumer
+	svc      service.UserService
+	consumer *sharedkafka.Consumer
 }
 
-func NewEventConsumer(brokers string, svc service.UserService) (*EventConsumer, error) {
-	k, err := kafka.NewConsumer(brokers, "auth-service-consumer-1", []string{"auth.user_registered"})
-	if err != nil {
-		return nil, err
-	}
+func NewEventConsumer(brokersCSV, topic, groupID string, svc service.UserService) (*EventConsumer, error) {
+	brokers := strings.Split(brokersCSV, ",")
+	c := sharedkafka.NewConsumer(brokers, topic, groupID)
+
 	return &EventConsumer{
-		svc:   svc,
-		kafka: k,
+		svc:      svc,
+		consumer: c,
 	}, nil
 }
 
 func (e *EventConsumer) Start(ctx context.Context) error {
-	return e.kafka.Start(ctx, func(key, value []byte) error {
+	return e.consumer.Start(ctx, func(key, value []byte) error {
 		var event domain.UserRegisteredEvent
 		if err := json.Unmarshal(value, &event); err != nil {
 			log.Printf("Failed to unmarshal event: %v", err)
 			return err
 		}
-
-		log.Printf("Received user_registered: %+v", event)
 
 		user := domain.User{
 			ID:    event.UserID,
@@ -42,11 +41,9 @@ func (e *EventConsumer) Start(ctx context.Context) error {
 			Name:  event.Name,
 		}
 
-		result, err := e.svc.CreateUser(ctx, &user)
-		if err != nil {
+		if _, err := e.svc.CreateUser(ctx, &user); err != nil {
 			log.Printf("Failed to save user: %v", err)
 		}
-		log.Printf("Saved user: %v", result)
 		return nil
 	})
 }

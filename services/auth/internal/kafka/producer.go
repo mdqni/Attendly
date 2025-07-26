@@ -9,19 +9,13 @@ import (
 )
 
 type EventProducer struct {
-	kafkaProducer *kafka.Producer
-	topic         string
+	producer *kafka.Producer
 }
 
-func NewEventProducer(kafkaBrokers string) (*EventProducer, error) {
-	p, err := kafka.NewProducer(kafkaBrokers)
-	if err != nil {
-		return nil, err
-	}
+func NewEventProducer(brokers []string, topic string) *EventProducer {
 	return &EventProducer{
-		kafkaProducer: p,
-		topic:         "auth.user_registered",
-	}, nil
+		producer: kafka.NewProducer(brokers, topic),
+	}
 }
 
 func (e *EventProducer) SendUserRegisteredEvent(ctx context.Context, userID, email, role, name string) error {
@@ -37,10 +31,10 @@ func (e *EventProducer) SendUserRegisteredEvent(ctx context.Context, userID, ema
 		return err
 	}
 
-	log.Printf("Sending kafka to Kafka: %s", data)
-	return e.kafkaProducer.Produce(e.topic, []byte(userID), data)
+	log.Printf("Sending Kafka Event: %s", data)
+	return e.producer.Produce([]byte(userID), data)
 }
 
 func (e *EventProducer) Close() {
-	e.kafkaProducer.Close()
+	_ = e.producer.Close()
 }
