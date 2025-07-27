@@ -2,11 +2,24 @@ syntax = "proto3";
 
 package qr.v1;
 
+import "google/api/annotations.proto";
+
 option go_package = "github.com/mdqni/Attendly/proto/gen/go/qr/v1;qrv1";
 
 service QRService {
-  rpc GenerateQR(GenerateQRRequest) returns (GenerateQRResponse);
-  rpc ValidateQR(ValidateQRRequest) returns (ValidateQRResponse);
+  rpc GenerateQR(GenerateQRRequest) returns (GenerateQRResponse) {
+    option (google.api.http) = {
+      post: "/v1/qr/generate"
+      body: "*"
+    };
+  }
+
+  rpc ValidateQR(ValidateQRRequest) returns (ValidateQRResponse) {
+    option (google.api.http) = {
+      post: "/v1/qr/validate"
+      body: "*"
+    };
+  }
 }
 
 message GenerateQRRequest {

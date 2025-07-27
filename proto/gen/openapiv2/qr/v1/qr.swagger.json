@@ -15,7 +15,72 @@
   "produces": [
     "application/json"
   ],
-  "paths": {},
+  "paths": {
+    "/v1/qr/generate": {
+      "post": {
+        "operationId": "QRService_GenerateQR",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GenerateQRResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GenerateQRRequest"
+            }
+          }
+        ],
+        "tags": [
+          "QRService"
+        ]
+      }
+    },
+    "/v1/qr/validate": {
+      "post": {
+        "operationId": "QRService_ValidateQR",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ValidateQRResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ValidateQRRequest"
+            }
+          }
+        ],
+        "tags": [
+          "QRService"
+        ]
+      }
+    }
+  },
   "definitions": {
     "protobufAny": {
       "type": "object",
@@ -45,7 +110,30 @@
         }
       }
     },
+    "v1GenerateQRRequest": {
+      "type": "object",
+      "properties": {
+        "lessonId": {
+          "type": "string"
+        },
+        "teacherId": {
+          "type": "string"
+        },
+        "expiresUnix": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
     "v1GenerateQRResponse": {
+      "type": "object",
+      "properties": {
+        "qrCode": {
+          "type": "string"
+        }
+      }
+    },
+    "v1ValidateQRRequest": {
       "type": "object",
       "properties": {
         "qrCode": {

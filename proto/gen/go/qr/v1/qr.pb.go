@@ -7,6 +7,7 @@
 package qrv1
 
 import (
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -225,7 +226,7 @@ var File_qr_v1_qr_proto protoreflect.FileDescriptor
 
 const file_qr_v1_qr_proto_rawDesc = "" +
 	"\n" +
-	"\x0eqr/v1/qr.proto\x12\x05qr.v1\"r\n" +
+	"\x0eqr/v1/qr.proto\x12\x05qr.v1\x1a\x1cgoogle/api/annotations.proto\"r\n" +
 	"\x11GenerateQRRequest\x12\x1b\n" +
 	"\tlesson_id\x18\x01 \x01(\tR\blessonId\x12\x1d\n" +
 	"\n" +
@@ -237,12 +238,12 @@ const file_qr_v1_qr_proto_rawDesc = "" +
 	"\aqr_code\x18\x01 \x01(\tR\x06qrCode\"G\n" +
 	"\x12ValidateQRResponse\x12\x14\n" +
 	"\x05valid\x18\x01 \x01(\bR\x05valid\x12\x1b\n" +
-	"\tlesson_id\x18\x02 \x01(\tR\blessonId2\x91\x01\n" +
-	"\tQRService\x12A\n" +
+	"\tlesson_id\x18\x02 \x01(\tR\blessonId2\xc9\x01\n" +
+	"\tQRService\x12]\n" +
 	"\n" +
-	"GenerateQR\x12\x18.qr.v1.GenerateQRRequest\x1a\x19.qr.v1.GenerateQRResponse\x12A\n" +
+	"GenerateQR\x12\x18.qr.v1.GenerateQRRequest\x1a\x19.qr.v1.GenerateQRResponse\"\x1a\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/v1/qr/generate\x12]\n" +
 	"\n" +
-	"ValidateQR\x12\x18.qr.v1.ValidateQRRequest\x1a\x19.qr.v1.ValidateQRResponseB3Z1github.com/mdqni/Attendly/proto/gen/go/qr/v1;qrv1b\x06proto3"
+	"ValidateQR\x12\x18.qr.v1.ValidateQRRequest\x1a\x19.qr.v1.ValidateQRResponse\"\x1a\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/v1/qr/validateB3Z1github.com/mdqni/Attendly/proto/gen/go/qr/v1;qrv1b\x06proto3"
 
 var (
 	file_qr_v1_qr_proto_rawDescOnce sync.Once
