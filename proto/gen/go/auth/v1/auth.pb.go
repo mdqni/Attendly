@@ -494,11 +494,10 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\x15ValidateTokenResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x12\n" +
 	"\x04role\x18\x02 \x01(\tR\x04role\x12 \n" +
-	"\vpermissions\x18\x03 \x03(\tR\vpermissions2\xb5\x03\n" +
+	"\vpermissions\x18\x03 \x03(\tR\vpermissions2\xe5\x02\n" +
 	"\vAuthService\x12Y\n" +
 	"\bRegister\x12\x18.auth.v1.RegisterRequest\x1a\x15.auth.v1.AuthResponse\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/v1/auth/register\x12P\n" +
-	"\x05Login\x12\x15.auth.v1.LoginRequest\x1a\x15.auth.v1.AuthResponse\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\"\x0e/v1/auth/login\x12N\n" +
-	"\rValidateToken\x12\x1d.auth.v1.ValidateTokenRequest\x1a\x1e.auth.v1.ValidateTokenResponse\x12L\n" +
+	"\x05Login\x12\x15.auth.v1.LoginRequest\x1a\x15.auth.v1.AuthResponse\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\"\x0e/v1/auth/login\x12L\n" +
 	"\x0fGetUserInfoById\x12\x1b.auth.v1.GetUserInfoRequest\x1a\x1c.auth.v1.GetUserInfoResponse\x12[\n" +
 	"\aRefresh\x12\x1c.auth.v1.RefreshTokenRequest\x1a\x15.auth.v1.AuthResponse\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v1/auth/refreshB7Z5github.com/mdqni/Attendly/proto/gen/go/auth/v1;authv1b\x06proto3"
 
@@ -530,16 +529,14 @@ var file_auth_v1_auth_proto_depIdxs = []int32{
 	8, // 0: auth.v1.AuthResponse.user:type_name -> user.v1.User
 	3, // 1: auth.v1.AuthService.Register:input_type -> auth.v1.RegisterRequest
 	4, // 2: auth.v1.AuthService.Login:input_type -> auth.v1.LoginRequest
-	6, // 3: auth.v1.AuthService.ValidateToken:input_type -> auth.v1.ValidateTokenRequest
-	2, // 4: auth.v1.AuthService.GetUserInfoById:input_type -> auth.v1.GetUserInfoRequest
-	0, // 5: auth.v1.AuthService.Refresh:input_type -> auth.v1.RefreshTokenRequest
-	5, // 6: auth.v1.AuthService.Register:output_type -> auth.v1.AuthResponse
-	5, // 7: auth.v1.AuthService.Login:output_type -> auth.v1.AuthResponse
-	7, // 8: auth.v1.AuthService.ValidateToken:output_type -> auth.v1.ValidateTokenResponse
-	1, // 9: auth.v1.AuthService.GetUserInfoById:output_type -> auth.v1.GetUserInfoResponse
-	5, // 10: auth.v1.AuthService.Refresh:output_type -> auth.v1.AuthResponse
-	6, // [6:11] is the sub-list for method output_type
-	1, // [1:6] is the sub-list for method input_type
+	2, // 3: auth.v1.AuthService.GetUserInfoById:input_type -> auth.v1.GetUserInfoRequest
+	0, // 4: auth.v1.AuthService.Refresh:input_type -> auth.v1.RefreshTokenRequest
+	5, // 5: auth.v1.AuthService.Register:output_type -> auth.v1.AuthResponse
+	5, // 6: auth.v1.AuthService.Login:output_type -> auth.v1.AuthResponse
+	1, // 7: auth.v1.AuthService.GetUserInfoById:output_type -> auth.v1.GetUserInfoResponse
+	5, // 8: auth.v1.AuthService.Refresh:output_type -> auth.v1.AuthResponse
+	5, // [5:9] is the sub-list for method output_type
+	1, // [1:5] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name

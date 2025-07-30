@@ -48,6 +48,7 @@ func RBACInterceptor(secret string) grpc.UnaryServerInterceptor {
 			return nil, status.Error(codes.Unauthenticated, "invalid token")
 		}
 		if claims.Role == "admin" {
+			ctx = context.WithValue(ctx, userIDKey, claims.UserID)
 			return handler(ctx, req)
 		}
 		action := normalizeAction(info.FullMethod)

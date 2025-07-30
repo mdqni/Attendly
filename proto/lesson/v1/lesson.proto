@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package lesson.v1;
+
+option go_package = "github.com/mdqni/Attendly/proto/gen/go/lesson/v1;lessonv1";
+
+import "google/api/annotations.proto";
+
+service LessonService {
+  rpc CreateLesson(CreateLessonRequest) returns (Lesson) {
+    option (google.api.http) = {
+      post: "/api/v1/lessons"
+      body: "*"
+    };
+  }
+
+  rpc GetLesson(GetLessonRequest) returns (Lesson) {
+    option (google.api.http) = {
+      get: "/api/v1/lessons/{lesson_id}"
+    };
+  }
+
+  // Список всех уроков (позже можно добавить фильтры)
+  rpc ListLessons(ListLessonsRequest) returns (LessonList) {
+    option (google.api.http) = {
+      get: "/api/v1/lessons"
+    };
+  }
+
+  // Удалить урок
+  rpc DeleteLesson(DeleteLessonRequest) returns (DeleteLessonResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/lessons/{lesson_id}"
+    };
+  }
+}
+
+message CreateLessonRequest {
+  string teacher_id = 1;
+  string subject = 2;
+  int64 start_time = 3;  // unix timestamp
+  int64 end_time = 4;    // unix timestamp
+  string location = 5;
+}
+
+message GetLessonRequest {
+  string lesson_id = 1;
+}
+
+message ListLessonsRequest {}
+
+message DeleteLessonRequest {
+  string lesson_id = 1;
+}
+
+message DeleteLessonResponse {
+  bool success = 1;
+}
+
+message Lesson {
+  string lesson_id = 1;
+  string teacher_id = 2;
+  string subject = 3;
+  int64 start_time = 4;
+  int64 end_time = 5;
+  Location location = 6;
+}
+
+message Location {
+  double latitude = 1;
+  double longitude = 2;
+  string room = 3;
+}
+message LessonList {
+  repeated Lesson lessons = 1;
+}

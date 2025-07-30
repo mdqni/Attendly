@@ -22,9 +22,8 @@ service AuthService {
     };
   }
 
-  rpc ValidateToken (ValidateTokenRequest) returns (ValidateTokenResponse);
-
   rpc GetUserInfoById (GetUserInfoRequest) returns (GetUserInfoResponse);
+
   rpc Refresh (RefreshTokenRequest) returns (AuthResponse) {
     option (google.api.http) = {
       post: "/v1/auth/refresh"

@@ -4,7 +4,7 @@ GOARCH  ?= amd64
 TAGS    ?= netgo
 OUTPUT_DIR := bin
 
-SERVICES := auth user group qr api-gateway
+SERVICES := auth user group qr api-gateway lesson
 
 build: $(SERVICES)
 

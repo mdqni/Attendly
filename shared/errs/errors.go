@@ -20,4 +20,7 @@ var (
 	ErrNoUserInGroup      = errors.New("no such user in group")
 	ErrGroupNotFound      = errors.New("group not found")
 	ErrGroupIsEmpty       = errors.New("group is empty")
+	//-------------------------------------------
+	ErrLessonNotFound = errors.New("lesson not found")
+	ErrUserNotTeacher = errors.New("user is not teacher, only teachers can create lessons")
 )

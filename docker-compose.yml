@@ -186,6 +186,35 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+
+  lesson:
+    build:
+      context: .
+      dockerfile: services/lesson/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      user:
+        condition: service_started
+      auth:
+        condition: service_started
+    ports:
+      - "50053:50053"
+    environment:
+      - CONN_STRING=postgresql://postgres:postgres@postgres:5432/attendly?sslmode=disable
+      - REDIS_ADDR=redis:6379
+      - JWT_SECRET=SUPER-SECRET-CODE
+      - USER_SERVICE_ADDR=user:50053
+      - KAFKA_BROKERS=kafka1:9092,kafka2:9092,kafka3:9092
+    networks:
+      - kafka-net
+
+    healthcheck:
+      test: [ "CMD", "grpc_health_probe", "-addr=localhost:50053" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   qr:
     build:
       context: .
