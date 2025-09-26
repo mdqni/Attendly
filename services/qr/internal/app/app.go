@@ -1,6 +1,9 @@
 package app
 
 import (
+	"log/slog"
+	"net"
+
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/mdqni/Attendly/services/qr/internal/config"
 	"github.com/mdqni/Attendly/services/qr/internal/delivery/grpc"
@@ -10,8 +13,6 @@ import (
 	g "google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"log/slog"
-	"net"
 )
 
 type App struct {

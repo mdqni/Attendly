@@ -39,11 +39,19 @@ service UserService {
   }
 }
 
+enum Role {
+  ROLE_UNSPECIFIED = 0;
+  ROLE_ADMIN = 1;
+  ROLE_TEACHER = 2;
+  ROLE_STUDENT = 3;
+}
+
+
 message User {
   string id = 1;
   string name = 2;
   string barcode = 3;
-  string role = 4;
+  Role role = 4;
   string email = 5;
   optional string avatar_url = 6;
 }

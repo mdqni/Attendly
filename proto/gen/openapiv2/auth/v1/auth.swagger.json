@@ -210,6 +210,16 @@
         }
       }
     },
+    "v1Role": {
+      "type": "string",
+      "enum": [
+        "ROLE_UNSPECIFIED",
+        "ROLE_ADMIN",
+        "ROLE_TEACHER",
+        "ROLE_STUDENT"
+      ],
+      "default": "ROLE_UNSPECIFIED"
+    },
     "v1User": {
       "type": "object",
       "properties": {
@@ -223,7 +233,7 @@
           "type": "string"
         },
         "role": {
-          "type": "string"
+          "$ref": "#/definitions/v1Role"
         },
         "email": {
           "type": "string"
